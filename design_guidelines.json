@@ -1,0 +1,121 @@
+{
+  "theme": "Dark",
+  "archetype": "Archetype 5 (Jewel & Luxury) mixed with organic elements. Deep Forest/Midnight Green and Soft Gold to emphasize charity impact, explicitly NOT a traditional golf site. Noble, premium, emotional.",
+  "typography": {
+    "headings": {
+      "font_family": "Cormorant Garamond, serif",
+      "weights": ["300", "400", "600"],
+      "usage": "H1/H2 for Marketing pages and main titles. Give an editorial, magazine-like premium feel.",
+      "import_url": "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&display=swap');"
+    },
+    "body": {
+      "font_family": "Outfit, sans-serif",
+      "weights": ["300", "400", "500", "600"],
+      "usage": "Dashboards, body text, UI components like buttons and form inputs.",
+      "import_url": "@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');"
+    },
+    "hierarchy_rules": "H1 maximum fluid text-5xl to text-6xl with tracking-tighter. Overlines MUST be uppercase tracking-[0.2em] text-xs. Dashboard headings text-2xl to text-3xl."
+  },
+  "colors": {
+    "background_strategy": "Deep Emerald/Obsidian base with animated dynamic gold/emerald gradients. DO NOT use static flat colors.",
+    "css_variables_override": {
+      "dark": {
+        "--background": "150 15% 6%",
+        "--foreground": "45 20% 95%",
+        "--card": "150 15% 8%",
+        "--card-foreground": "45 20% 95%",
+        "--popover": "150 15% 8%",
+        "--popover-foreground": "45 20% 95%",
+        "--primary": "45 60% 60%",
+        "--primary-foreground": "150 20% 5%",
+        "--secondary": "150 20% 12%",
+        "--secondary-foreground": "45 60% 60%",
+        "--muted": "150 15% 15%",
+        "--muted-foreground": "150 10% 60%",
+        "--accent": "150 25% 15%",
+        "--accent-foreground": "45 60% 60%",
+        "--border": "150 15% 18%",
+        "--input": "150 15% 18%",
+        "--ring": "45 60% 60%"
+      }
+    }
+  },
+  "visual_enhancers": {
+    "gradients": "Apply 'bg-gradient-to-br from-background via-[#0f2015] to-background' or use mesh gradients to ensure the background is never purely static. Use abstract_background media url as a faint full-width section background.",
+    "glassmorphism": "For headers and sticky navs, use `backdrop-blur-xl bg-background/60` with a 1px `border-b border-border`. Optical clarity, never muddy.",
+    "borders": "Expose the grid layout on dashboards. Use 1px solid strokes (`border-white/10` or `border-primary/20`) instead of heavy shadows. Apply 'Tracing Beam' inspired glowing borders for high-conversion Subscription Plans cards.",
+    "shadows": "Diffuse ambient shadows tinted with emerald or gold, only for elevated active states."
+  },
+  "grids_and_layout": {
+    "spacing": "Generous. Use p-8 to p-12 for internal card padding on marketing sections. For dashboards, use tight gap-4/gap-6 but ensure containers breathe.",
+    "marketing_grid": "Mode A 'Tetris' Grid. Asymmetric. Mix at least 3 shapes. Do not fill 100% of the grid perfectly.",
+    "dashboard_grid": "Mode B 'Control Room' Grid. Strict hierarchy, dense data. 1px border grid intersections.",
+    "alignment": "Left-align paragraphs, inputs, and data. Never center everything. Asymmetry creates tension."
+  },
+  "components": {
+    "buttons": "Shadcn buttons customized: Primary buttons should have a soft gold glow on hover. No pure black text on gold, use deep emerald (--primary-foreground).",
+    "cards": "Go cardless or flat rectangular. Max `rounded-sm`. Do not overuse standard drop-shadows to keep the premium editorial look.",
+    "forms": "Shadcn Form, Input, Select. Clean left-aligned labels with high contrast focus rings.",
+    "tables": "Shadcn Table for Charity Directory, Score Entry, Draw System. Minimal headers, generous row padding.",
+    "data_testid": "ALL interactive elements (buttons, links, inputs, tabs) MUST have data-testid."
+  },
+  "motion": {
+    "hover_states": "Lighter hue of active state. ALWAYS explicit text color on hover. E.g., `hover:bg-primary/90 hover:text-primary-foreground`.",
+    "page_transitions": "Use Framer Motion for stagger children entrance animations (lists, grids).",
+    "microinteractions": "Buttons scale down slightly (`active:scale-95`). Subtle lifts on card hover (`-translate-y-1`)."
+  },
+  "accessibility": {
+    "contrast": "Ensure gold text on dark background meets 4.5:1 ratio. Text over images must have gradient overlays or backdrop-blurs.",
+    "focus": "`focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background`"
+  },
+  "media": {
+    "icons": "lucide-react",
+    "image_urls": [
+      {
+        "category": "hero_background",
+        "url": "https://static.prod-images.emergentagent.com/jobs/f10c4201-1bbb-4fa1-9c71-dc484ab535ed/images/0a2f770f5131bb741d1886cf4fd3048062c6a32a5b97f642eebd62493247cfd7.png",
+        "description": "Cinematic wide-angle shot of a glowing golf hole flag on a pristine green at twilight, ethereal volumetric lighting, deep emerald and soft gold color palette"
+      },
+      {
+        "category": "abstract_background",
+        "url": "https://static.prod-images.emergentagent.com/jobs/f10c4201-1bbb-4fa1-9c71-dc484ab535ed/images/7a2ed3aa4b54e79554d3be77663ed3b21a8615e0a30e83367f5a0f6e307825de.png",
+        "description": "Abstract flowing silk mesh in deep forest green and soft gold colors, used for premium container backgrounds"
+      },
+      {
+        "category": "impact_story_image",
+        "url": "https://static.prod-images.emergentagent.com/jobs/f10c4201-1bbb-4fa1-9c71-dc484ab535ed/images/cf701cb38e4476bc1ee4790912924a998ca8d1bfc8eb3c80fa343503bf8245b1.png",
+        "description": "Hands planting a small tree sapling in rich dark soil at golden hour"
+      },
+      {
+        "category": "golf_action",
+        "url": "https://images.pexels.com/photos/6256834/pexels-photo-6256834.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Professional golfer in action at sunset"
+      },
+      {
+        "category": "community_charity",
+        "url": "https://images.pexels.com/photos/6646916/pexels-photo-6646916.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Group of volunteers providing food and aid"
+      },
+      {
+        "category": "sponsor_logo_1",
+        "url": "https://images.unsplash.com/photo-1555274175-75f4056dfd05?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzJ8MHwxfHNlYXJjaHwzfHxicmFuZCUyMGxvZ28lMjBtaW5pbWFsfGVufDB8fHx8MTc3NDQ1NTczN3ww&ixlib=rb-4.1.0&q=85",
+        "description": "Adidas logo"
+      },
+      {
+        "category": "sponsor_logo_2",
+        "url": "https://images.unsplash.com/photo-1674978037981-fef8cbf2b3a2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzJ8MHwxfHNlYXJjaHwxfHxicmFuZCUyMGxvZ28lMjBtaW5pbWFsfGVufDB8fHx8MTc3NDQ1NTczN3ww&ixlib=rb-4.1.0&q=85",
+        "description": "Nike logo"
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Force dark mode via the 'dark' class on the HTML/Body or main wrapper.",
+    "Update tailwind.config.js to include the custom font families: sans: ['Outfit', 'sans-serif'], serif: ['Cormorant Garamond', 'serif'].",
+    "Replace root CSS variables in index.css with the provided dark theme CSS variables to enforce the deep emerald/gold palette globally.",
+    "For the dynamic, non-static color requirement: apply 'bg-gradient-to-br from-background via-[#0f2015] to-background' on the main layout or use an animated gradient background.",
+    "Marketing sections must use large font-serif headings with high contrast against the dark background. DO NOT center align everything; use asymmetrical bento grids.",
+    "Use Glassmorphism (bg-background/60 backdrop-blur-xl) for any sticky headers or overlays.",
+    "Never use generic placeholders for images. ALWAYS use the provided URLs in the media section.",
+    "Add 'data-testid' to EVERY button, link, and form input."
+  ]
+}
