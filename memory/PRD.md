@@ -1,73 +1,46 @@
-# Golf Charity Subscription Platform - PRD
+# The Kinetic - Golf Charity Subscription Platform PRD
 
 ## Original Problem Statement
-Build a Golf Charity Subscription Platform based on the provided PRD document. A subscription-driven web application combining golf performance tracking, charity fundraising, monthly prize draws, and charitable giving.
+Build a Golf Charity Subscription Platform. Complete UI redesign to match "The Kinetic" design system with dark surface theme, cyan/purple/gold accents, Inter font, Material Symbols icons, bento grid layouts, sidebar navigation, and bottom mobile nav.
 
 ## Architecture
-- **Frontend**: React 19 + Tailwind CSS + Shadcn UI + Framer Motion
+- **Frontend**: React 19 + Tailwind CSS + Material Symbols + Framer Motion
 - **Backend**: FastAPI + MongoDB (Motor) + JWT Auth
 - **Integrations**: Stripe (test mode), SendGrid (emails)
-- **Design**: Dark emerald/gold theme (Cormorant Garamond + Outfit fonts)
+- **Design**: Dark surface (#131313) + Cyan primary (#4cd7f6) + Purple secondary (#d0bcff) + Gold tertiary (#ffb95f)
 
 ## User Personas
-1. **Public Visitor**: Views platform, explores charities, initiates subscription
-2. **Registered Subscriber**: Manages scores, selects charity, enters draws, claims winnings
-3. **Administrator**: Manages users, draws, charities, verifies winners, views analytics
-
-## Core Requirements
-- JWT auth (signup/login)
-- Stripe subscription checkout (monthly $9.99 / yearly $99.99)
-- Golf score management (Stableford 1-45, rolling 5 scores)
-- Charity system (directory, user selection, contribution %)
-- Draw system (5/4/3-number match, random/algorithmic)
-- Prize pool (40/35/25% split, jackpot rollover)
-- Winner verification (proof upload, admin review, payout)
-- Admin dashboard (analytics, user mgmt, draw mgmt, charity mgmt, winner verification)
-- SendGrid email notifications
+1. Public Visitor: Views platform, explores charities, initiates subscription
+2. Registered Subscriber: Manages scores, selects charity, enters draws
+3. Administrator: Manages users, draws, charities, verifies winners
 
 ## What's Been Implemented (Feb 2026)
+- [x] Complete UI redesign matching "The Kinetic" templates
+- [x] Landing page with hero, stats, bento grid ecosystem, charity impact, pricing
+- [x] Sidebar navigation for authenticated pages
+- [x] Bottom mobile navigation
+- [x] Admin dashboard (Platform Control, Draw Engine, Verification Queue, Subscriber Directory)
+- [x] User dashboard (Impact Dashboard, bento grid, score entry 5-inline inputs, draw history)
+- [x] Charity directory (featured hero, search, filter chips, card grid)
+- [x] Subscription plans (Standard Kinetic / Elite Kinetic)
 - [x] Full backend API with 30+ endpoints
-- [x] JWT authentication with bcrypt password hashing
-- [x] Stripe checkout integration (test mode)
-- [x] SendGrid email notifications
-- [x] Landing page with hero, stats, how it works, charity impact, prize pool sections
-- [x] Signup/Login flows
-- [x] Subscription plan selection with Stripe checkout redirect
-- [x] Payment status polling and subscription activation
-- [x] User Dashboard (scores, charity selection, draws, winnings, settings)
-- [x] Charity Directory with search and filter
-- [x] Admin Dashboard (analytics, users, charities, draws, winners)
-- [x] Draw simulation and publish flow
+- [x] JWT auth, Stripe checkout, SendGrid emails
+- [x] Score management (Stableford 1-45, rolling 5)
+- [x] Draw system (random/algorithmic, jackpot rollover)
 - [x] Winner verification and payout tracking
-- [x] Responsive mobile-first design
-- [x] Dark emerald/gold premium theme
-- [x] Seed data (5 charities + admin user)
 
 ## Test Credentials
 - Admin: admin@golfcharity.com / admin123
 
 ## Prioritized Backlog
-### P0 (Critical)
-- All core features implemented
+### P1
+- Independent donation flow
+- Subscription expiration cron
+- Rich email templates
+- Advanced analytics charts (Recharts)
 
-### P1 (Important)
-- Independent donation option (not tied to subscription)
-- Multi-country expansion support
-- Email templates for draw results/winner notifications
-- Subscription renewal/expiration handling cron
-
-### P2 (Nice to Have)
+### P2
 - Team/corporate accounts
 - Campaign module
-- Social proof (testimonials)
 - User profile image upload
 - Draw countdown timer
-- Advanced analytics charts
-- Export reports (CSV/PDF)
-
-## Next Tasks
-1. Add independent donation flow for charities
-2. Implement cron job for subscription expiration checks
-3. Add rich email templates for notifications
-4. User profile editing and avatar support
-5. Advanced analytics with Recharts graphs in admin
