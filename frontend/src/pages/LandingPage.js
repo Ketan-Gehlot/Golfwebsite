@@ -1,255 +1,170 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Button } from '../components/ui/button';
-import { motion } from 'framer-motion';
-import { Trophy, Heart, Target, ArrowRight, Star, Users, Gift, ChevronRight } from 'lucide-react';
-
-const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } };
-const stagger = { visible: { transition: { staggerChildren: 0.15 } } };
+import { MIcon } from '../components/MIcon';
 
 export default function LandingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-
-  const handleCTA = () => {
-    if (user) navigate('/dashboard');
-    else navigate('/signup');
-  };
+  const handleCTA = () => navigate(user ? '/dashboard' : '/signup');
 
   return (
-    <div className="min-h-screen animated-gradient-bg">
-      {/* Hero */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+    <div className="bg-surface text-on-surface">
+      {/* Hero Section */}
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden px-8">
         <div className="absolute inset-0 z-0">
-          <img
-            src="https://static.prod-images.emergentagent.com/jobs/f10c4201-1bbb-4fa1-9c71-dc484ab535ed/images/0a2f770f5131bb741d1886cf4fd3048062c6a32a5b97f642eebd62493247cfd7.png"
-            alt=""
-            className="w-full h-full object-cover opacity-30"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-surface via-surface/80 to-transparent z-10" />
+          <img className="w-full h-full object-cover" alt="Abstract digital energy visualization" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwbIiiXzFwKZ4YgzWkvXkjYxevWc713ypzmzaN2G3YtacAmEsZoWzp1rrqoJ8k_EkFIPTgi4IKeTTfLfzmHX_mJ6ypHjxPNZ8W1VlSNMTH_G4rijnoTar4-9GBT_r94ochG5IpftAEMLivrJrvrdYjX2UokD_hhTdrDBFzWEj4Xaao07KhhZR9BjmnbwUkoCbkPGBdc2nqTP-nMkn_sVtRF6Lki7ykdR6PLpQc5JGC9D1yCHmZwvJvcO8DY_T1PCseXSCIIzEjP6At" />
         </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 py-20">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={stagger}
-            className="max-w-2xl"
-          >
-            <motion.p variants={fadeUp} className="uppercase tracking-[0.2em] text-xs text-primary mb-6">
-              Play with Purpose
-            </motion.p>
-            <motion.h1
-              variants={fadeUp}
-              className="font-serif text-5xl sm:text-6xl lg:text-7xl font-light tracking-tighter text-foreground leading-[1.1] mb-6"
-            >
-              Your Scores,<br />
-              <span className="text-primary font-semibold">Their Future</span>
-            </motion.h1>
-            <motion.p variants={fadeUp} className="text-base text-muted-foreground max-w-lg mb-10 leading-relaxed">
-              A subscription platform where your golf scores fund charitable impact and enter you into monthly prize draws. Play the game you love. Change lives.
-            </motion.p>
-            <motion.div variants={fadeUp} className="flex flex-wrap gap-4">
-              <Button
-                data-testid="hero-cta-btn"
-                onClick={handleCTA}
-                className="gold-glow px-8 py-6 text-base font-medium active:scale-95 transition-transform"
-              >
-                Get Started <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button
-                data-testid="hero-learn-btn"
-                variant="outline"
-                onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-                className="px-8 py-6 text-base border-primary/30 text-primary hover:bg-primary/10"
-              >
-                How It Works
-              </Button>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Stats Bar */}
-      <section className="border-y border-border/50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-8 grid grid-cols-2 md:grid-cols-4 gap-8">
-          {[
-            { label: 'Active Members', value: '2,400+', icon: Users },
-            { label: 'Prize Pool', value: '$48,000', icon: Trophy },
-            { label: 'Charities Supported', value: '35+', icon: Heart },
-            { label: 'Total Donated', value: '$120K+', icon: Gift },
-          ].map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="text-left"
-            >
-              <stat.icon className="h-5 w-5 text-primary mb-2" />
-              <p className="text-2xl sm:text-3xl font-serif font-semibold text-foreground">{stat.value}</p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section id="how-it-works" className="py-24">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
-            <motion.p variants={fadeUp} className="uppercase tracking-[0.2em] text-xs text-primary mb-4">The Process</motion.p>
-            <motion.h2 variants={fadeUp} className="font-serif text-4xl sm:text-5xl font-light tracking-tighter text-foreground mb-16">
-              Simple Steps,<br /><span className="text-primary">Real Impact</span>
-            </motion.h2>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                step: '01',
-                title: 'Subscribe & Choose',
-                desc: 'Pick a monthly or yearly plan. Select a charity close to your heart. A portion of your subscription goes directly to them.',
-                icon: Star,
-              },
-              {
-                step: '02',
-                title: 'Enter Your Scores',
-                desc: 'Submit your latest 5 Stableford golf scores. These become your draw numbers for the monthly prize pool.',
-                icon: Target,
-              },
-              {
-                step: '03',
-                title: 'Win & Give Back',
-                desc: 'Every month, a draw is held. Match 3, 4, or all 5 numbers to win. The jackpot rolls over if unclaimed.',
-                icon: Trophy,
-              },
-            ].map((item, i) => (
-              <motion.div
-                key={item.step}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                className="group p-8 border border-border/50 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1"
-              >
-                <span className="text-xs text-primary/60 font-mono">{item.step}</span>
-                <item.icon className="h-8 w-8 text-primary mt-4 mb-4" />
-                <h3 className="font-serif text-2xl text-foreground mb-3">{item.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-              </motion.div>
-            ))}
+        <div className="relative z-20 max-w-4xl">
+          <div className="inline-flex items-center gap-2 bg-secondary-container/30 border border-outline-variant/20 px-4 py-1.5 rounded-full mb-8">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-xs font-label uppercase tracking-widest text-on-secondary-container">The Philanthropic Player</span>
+          </div>
+          <h1 className="text-[3.5rem] md:text-[5rem] leading-[1.05] font-bold tracking-tighter mb-8 bg-clip-text text-transparent bg-gradient-to-b from-on-surface to-on-surface-variant" data-testid="hero-title">
+            Golf with a Heart,<br/>Play with Purpose.
+          </h1>
+          <p className="text-xl text-on-surface-variant max-w-xl mb-12 leading-relaxed">
+            Transform every scorecard into a catalyst for change. Join an elite community of golfers turning professional passion into humanitarian impact.
+          </p>
+          <div className="flex flex-wrap gap-6">
+            <button onClick={handleCTA} className="bg-gradient-to-br from-primary to-primary-container text-on-primary-container px-10 py-5 rounded-xl font-bold text-lg shadow-[0_0_40px_rgba(76,215,246,0.3)] hover:scale-105 transition-transform ease-out-expo" data-testid="hero-cta-btn">
+              Start Your Impact
+            </button>
+            <button onClick={() => navigate(user ? '/dashboard' : '/login')} className="bg-surface-container-highest text-primary px-10 py-5 rounded-xl font-bold text-lg hover:bg-surface-bright transition-colors" data-testid="hero-draws-btn">
+              View Live Draws
+            </button>
           </div>
         </div>
       </section>
 
-      {/* Charity Impact */}
-      <section className="py-24 border-t border-border/50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
-                <motion.p variants={fadeUp} className="uppercase tracking-[0.2em] text-xs text-primary mb-4">Charity Impact</motion.p>
-                <motion.h2 variants={fadeUp} className="font-serif text-4xl sm:text-5xl font-light tracking-tighter text-foreground mb-6">
-                  Every Round<br /><span className="text-primary">Makes a Difference</span>
-                </motion.h2>
-                <motion.p variants={fadeUp} className="text-muted-foreground leading-relaxed mb-8">
-                  When you subscribe, you choose where your contribution goes. From reforestation projects to youth sports initiatives, your passion for golf creates real-world change.
-                </motion.p>
-                <motion.div variants={fadeUp}>
-                  <Link to="/charities">
-                    <Button variant="outline" data-testid="explore-charities-btn" className="border-primary/30 text-primary hover:bg-primary/10">
-                      Explore Charities <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </motion.div>
-              </motion.div>
-            </div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              className="relative"
-            >
-              <img
-                src="https://static.prod-images.emergentagent.com/jobs/f10c4201-1bbb-4fa1-9c71-dc484ab535ed/images/cf701cb38e4476bc1ee4790912924a998ca8d1bfc8eb3c80fa343503bf8245b1.png"
-                alt="Charity impact"
-                className="w-full rounded-sm border border-border/30"
-              />
-              <div className="absolute -bottom-6 -left-6 p-6 glass rounded-sm">
-                <p className="text-3xl font-serif text-primary font-semibold">$120K+</p>
-                <p className="text-sm text-muted-foreground">donated to charities</p>
+      {/* Stats Counter Section */}
+      <section className="py-24 px-8 border-y border-outline-variant/10 bg-surface-container-lowest">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-7xl mx-auto">
+          <div className="text-center md:text-left">
+            <div className="text-on-surface-variant font-label uppercase tracking-widest mb-2">Total Contributions</div>
+            <div className="text-5xl font-bold text-primary" data-testid="stat-contributions">$4,820,150</div>
+          </div>
+          <div className="text-center md:text-left border-x border-outline-variant/10 px-12">
+            <div className="text-on-surface-variant font-label uppercase tracking-widest mb-2">Impact Partners</div>
+            <div className="text-5xl font-bold text-tertiary" data-testid="stat-partners">142</div>
+          </div>
+          <div className="text-center md:text-left">
+            <div className="text-on-surface-variant font-label uppercase tracking-widest mb-2">Winner Payouts</div>
+            <div className="text-5xl font-bold text-secondary" data-testid="stat-payouts">$1,240,000</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Core Pillars (Bento Grid) */}
+      <section className="py-32 px-8 max-w-7xl mx-auto">
+        <div className="mb-20">
+          <h2 className="text-4xl font-bold tracking-tight mb-4">The Kinetic Ecosystem</h2>
+          <div className="h-1 w-24 bg-primary rounded-full" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+          {/* Subscription Engine */}
+          <div className="md:col-span-8 group relative overflow-hidden rounded-3xl bg-surface-container-low p-12 hover:bg-surface-container transition-colors duration-500">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] rounded-full -mr-20 -mt-20" />
+            <MIcon icon="card_membership" className="text-primary text-5xl mb-8" size="text-5xl" />
+            <h3 className="text-3xl font-bold mb-4">Subscription Engine</h3>
+            <p className="text-on-surface-variant text-lg max-w-md mb-8">Seamlessly manage your charitable journey with flexible tiers designed for maximum impact and exclusive member rewards.</p>
+            <ul className="space-y-4 text-on-surface">
+              <li className="flex items-center gap-3"><MIcon icon="check_circle" className="text-primary" size="text-xl" /> Automated monthly giving cycles</li>
+              <li className="flex items-center gap-3"><MIcon icon="check_circle" className="text-primary" size="text-xl" /> Tax-deductible receipt generation</li>
+            </ul>
+          </div>
+          {/* Performance Tracking */}
+          <div className="md:col-span-4 group overflow-hidden rounded-3xl bg-surface-container-high p-12 hover:ring-1 ring-primary/30 transition-all duration-500">
+            <MIcon icon="query_stats" className="text-tertiary text-5xl mb-8" size="text-5xl" />
+            <h3 className="text-2xl font-bold mb-4">Performance Tracking</h3>
+            <p className="text-on-surface-variant mb-8 leading-relaxed">Log your rounds, track your improvement, and climb the Impact Leaderboard with every birdie.</p>
+            <img className="w-full h-40 object-cover rounded-xl mt-4 grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" alt="Data visualization" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDy0uEI4dp9uNjsBk3iISO-eNaagLSW9GASNXe1VYqt40oWKURk3LQQ2enNMJeKm385WkX2EK1eaLAG7v9wuqA0QiiV_p_Xd8ryxd-LBvmC0ybTJNp9Z0ErwKg4weYaZZjgxO1hYcNT_yrBzn0nBpCx6XcosKUgFHjJbnMtRQ_Hbv9QSnHiohfw-XrKXjt_M4jbh1gRqYgJ-UuiodLDrvbbqFrb0aGGi_4Rrevzp-5B_IonvoXpTiH4-LWJs58kbew4W_c-pwPtpQ2W" />
+          </div>
+          {/* Monthly Prize Draws */}
+          <div className="md:col-span-12 group relative overflow-hidden rounded-3xl bg-gradient-to-br from-surface-container-low to-surface-container-lowest p-12 border border-outline-variant/10">
+            <div className="flex flex-col md:flex-row items-center gap-12">
+              <div className="flex-1">
+                <MIcon icon="military_tech" className="text-secondary text-5xl mb-8" size="text-5xl" />
+                <h3 className="text-3xl font-bold mb-4">Monthly Prize Draws</h3>
+                <p className="text-on-surface-variant text-lg max-w-xl">Every subscription serves as an entry into our exclusive monthly prize pool. Win world-class golf experiences while your contribution funds vital global initiatives.</p>
               </div>
-            </motion.div>
+              <div className="w-full md:w-80 h-48 rounded-2xl glass-panel border border-outline-variant/20 p-8 flex flex-col justify-center">
+                <div className="text-on-surface-variant text-xs uppercase tracking-widest mb-2">Next Draw Pool</div>
+                <div className="text-4xl font-black text-white">$25,000</div>
+                <div className="text-primary text-sm mt-4 font-bold">12 Days Remaining</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Prize Pool */}
-      <section className="py-24 border-t border-border/50 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <img
-            src="https://static.prod-images.emergentagent.com/jobs/f10c4201-1bbb-4fa1-9c71-dc484ab535ed/images/7a2ed3aa4b54e79554d3be77663ed3b21a8615e0a30e83367f5a0f6e307825de.png"
-            alt="" className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
-            <motion.p variants={fadeUp} className="uppercase tracking-[0.2em] text-xs text-primary mb-4">Monthly Draws</motion.p>
-            <motion.h2 variants={fadeUp} className="font-serif text-4xl sm:text-5xl font-light tracking-tighter text-foreground mb-16">
-              Prize Pool<br /><span className="text-primary">Breakdown</span>
-            </motion.h2>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { match: '5-Number Match', share: '40%', rollover: true, tier: 'Jackpot' },
-              { match: '4-Number Match', share: '35%', rollover: false, tier: 'Second' },
-              { match: '3-Number Match', share: '25%', rollover: false, tier: 'Third' },
-            ].map((item, i) => (
-              <motion.div
-                key={item.match}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="p-8 border border-border/50 hover:border-primary/40 transition-all"
-              >
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">{item.tier} Tier</p>
-                <h3 className="font-serif text-3xl text-foreground mb-2">{item.match}</h3>
-                <p className="text-4xl font-serif text-primary font-semibold mb-4">{item.share}</p>
-                <p className="text-sm text-muted-foreground">
-                  {item.rollover ? 'Rolls over if unclaimed' : 'Split equally among winners'}
-                </p>
-              </motion.div>
-            ))}
+      {/* Charity Impact Section */}
+      <section className="py-32 bg-[#0b0b0b] relative">
+        <div className="max-w-7xl mx-auto px-8 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+          <div className="relative">
+            <div className="absolute -inset-4 bg-primary/20 blur-[80px] rounded-full" />
+            <img className="relative z-10 w-full aspect-square object-cover rounded-[3rem]" alt="Community volunteers" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAFAmOJZ1tS5sFtnJSSd5GGBNjzh1NLtpJK1JtBslzJvXhsr4DfcKxTnHekzwBcp-t9sxAz2vkEmtA7oKsKuGCXQQ0MqVOo0MKzZETEV0cs_pJgjmuqFKTcsb6mj-gRI3wvxL7HSjf9IRf5PWVJNVMAPMOhqB1xySU9h5UOQrNmw_b1acroWdlwLfqC676dmoGQXhEAxVqQ_CE9WhhtP2kanMqaUaslC7kYeeb7EiH1gFY1BGxQ0hTUlTvueyqaFNLcVV27wbtKg9G" />
+            <div className="absolute bottom-8 left-8 right-8 z-20 glass-panel p-6 rounded-2xl border border-white/10">
+              <div className="flex items-center gap-4 mb-2">
+                <div className="bg-primary-container p-2 rounded-lg">
+                  <MIcon icon="volunteer_activism" className="text-surface" size="text-xl" />
+                </div>
+                <div className="font-bold text-white">The Clean Water Project</div>
+              </div>
+              <p className="text-sm text-on-surface-variant">Your contributions this month are providing filtration systems to 15 rural communities.</p>
+            </div>
+          </div>
+          <div>
+            <h2 className="text-5xl font-bold tracking-tighter mb-8">Direct Impact.<br/>Real Stories.</h2>
+            <p className="text-xl text-on-surface-variant leading-relaxed mb-12">
+              We believe in transparency. Choose exactly where your kinetic energy goes—from reforestation and clean water to local youth sports development.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
+              <div className="p-6 rounded-2xl bg-surface-container-high border-l-4 border-primary">
+                <div className="text-primary font-bold text-2xl mb-1">85%</div>
+                <div className="text-xs font-label uppercase text-on-surface-variant">Direct to Cause</div>
+              </div>
+              <div className="p-6 rounded-2xl bg-surface-container-high border-l-4 border-tertiary">
+                <div className="text-tertiary font-bold text-2xl mb-1">100%</div>
+                <div className="text-xs font-label uppercase text-on-surface-variant">Impact Verified</div>
+              </div>
+            </div>
+            <button onClick={() => navigate('/charities')} className="flex items-center gap-3 text-primary font-bold text-lg hover:gap-5 transition-all group" data-testid="explore-charities-btn">
+              Select Your Cause <MIcon icon="arrow_forward" size="text-xl" />
+            </button>
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-24 border-t border-border/50">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
-            <motion.h2 variants={fadeUp} className="font-serif text-4xl sm:text-5xl font-light tracking-tighter text-foreground mb-6">
-              Ready to Play<br /><span className="text-primary">With Purpose?</span>
-            </motion.h2>
-            <motion.p variants={fadeUp} className="text-muted-foreground mb-10 max-w-md mx-auto">
-              Join thousands of golfers making a difference. From just $9.99/month.
-            </motion.p>
-            <motion.div variants={fadeUp}>
-              <Button
-                data-testid="cta-subscribe-btn"
-                onClick={handleCTA}
-                size="lg"
-                className="gold-glow px-10 py-6 text-base font-medium active:scale-95 transition-transform"
-              >
-                Subscribe Now <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </motion.div>
-          </motion.div>
+      {/* Pricing Section */}
+      <section className="py-32 px-8 max-w-5xl mx-auto text-center">
+        <h2 className="text-4xl font-bold mb-4">Choose Your Impact Level</h2>
+        <p className="text-on-surface-variant mb-16">Select the plan that aligns with your passion and purpose.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="bg-surface-container-low p-12 rounded-[2.5rem] border border-outline-variant/10 hover:scale-[1.02] transition-transform ease-out-expo">
+            <div className="text-on-surface-variant font-label uppercase tracking-widest mb-4">Standard Kinetic</div>
+            <div className="text-6xl font-bold mb-4">$9.99<span className="text-xl text-on-surface-variant font-normal">/mo</span></div>
+            <p className="text-on-surface-variant mb-8">Fuel the mission monthly.</p>
+            <ul className="space-y-4 mb-12 text-left">
+              <li className="flex items-center gap-3"><MIcon icon="check" className="text-primary" size="text-xl" /> 1 Monthly Draw Entry</li>
+              <li className="flex items-center gap-3"><MIcon icon="check" className="text-primary" size="text-xl" /> Performance Score Tracking</li>
+              <li className="flex items-center gap-3"><MIcon icon="check" className="text-primary" size="text-xl" /> Monthly Impact Reports</li>
+            </ul>
+            <button onClick={() => navigate(user ? '/subscription' : '/signup')} className="w-full py-4 rounded-xl border border-primary text-primary font-bold hover:bg-primary/10 transition-colors" data-testid="cta-monthly-btn">Select Monthly</button>
+          </div>
+          <div className="relative bg-surface-container-highest p-12 rounded-[2.5rem] shadow-[0_40px_100px_rgba(76,215,246,0.15)] border border-primary/20 hover:scale-[1.02] transition-transform ease-out-expo">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-on-primary-container px-6 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Best Value</div>
+            <div className="text-on-surface-variant font-label uppercase tracking-widest mb-4">Elite Kinetic</div>
+            <div className="text-6xl font-bold mb-4">$99.99<span className="text-xl text-on-surface-variant font-normal">/yr</span></div>
+            <p className="text-on-surface-variant mb-8">Maximum impact, 2 months free.</p>
+            <ul className="space-y-4 mb-12 text-left">
+              <li className="flex items-center gap-3"><MIcon icon="check" className="text-primary" size="text-xl" /> 3 Monthly Draw Entries</li>
+              <li className="flex items-center gap-3"><MIcon icon="check" className="text-primary" size="text-xl" /> Elite Tier Leaderboard Access</li>
+              <li className="flex items-center gap-3"><MIcon icon="check" className="text-primary" size="text-xl" /> Direct Charity Selection Control</li>
+            </ul>
+            <button onClick={() => navigate(user ? '/subscription' : '/signup')} className="w-full py-4 rounded-xl bg-gradient-to-br from-primary to-primary-container text-on-primary-container font-bold shadow-lg" data-testid="cta-yearly-btn">Start Yearly Impact</button>
+          </div>
         </div>
       </section>
     </div>

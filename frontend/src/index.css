@@ -1,105 +1,60 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 150 15% 6%;
-    --foreground: 45 20% 95%;
-    --card: 150 15% 8%;
-    --card-foreground: 45 20% 95%;
-    --popover: 150 15% 8%;
-    --popover-foreground: 45 20% 95%;
-    --primary: 45 60% 60%;
-    --primary-foreground: 150 20% 5%;
-    --secondary: 150 20% 12%;
-    --secondary-foreground: 45 60% 60%;
-    --muted: 150 15% 15%;
-    --muted-foreground: 150 10% 60%;
-    --accent: 150 25% 15%;
-    --accent-foreground: 45 60% 60%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 150 15% 18%;
-    --input: 150 15% 18%;
-    --ring: 45 60% 60%;
-    --chart-1: 45 60% 60%;
-    --chart-2: 150 40% 40%;
-    --chart-3: 30 70% 55%;
-    --chart-4: 160 50% 50%;
-    --chart-5: 200 60% 50%;
-    --radius: 0.25rem;
-  }
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #131313;
+  color: #e5e2e1;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground font-sans;
-  }
-  h1, h2, h3 {
-    font-family: 'Cormorant Garamond', serif;
-  }
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.ease-out-expo {
+  transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.glass-panel {
+  background: rgba(53, 53, 52, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+::selection {
+  background: rgba(76, 215, 246, 0.3);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #131313;
+}
+::-webkit-scrollbar-thumb {
+  background: #3d494c;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4cd7f6;
+}
+
+/* Remove number input spinners */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
 }
 
 @layer base {
   [data-debug-wrapper="true"] {
     display: contents !important;
   }
-}
-
-/* Animated gradient background */
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.animated-gradient-bg {
-  background: linear-gradient(-45deg, hsl(150, 15%, 6%), hsl(150, 20%, 10%), hsl(150, 15%, 6%), hsl(145, 18%, 8%));
-  background-size: 400% 400%;
-  animation: gradientShift 15s ease infinite;
-}
-
-/* Gold glow on buttons */
-.gold-glow:hover {
-  box-shadow: 0 0 20px hsla(45, 60%, 60%, 0.3), 0 0 40px hsla(45, 60%, 60%, 0.1);
-}
-
-/* Glass effect */
-.glass {
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  background: hsla(150, 15%, 8%, 0.6);
-  border: 1px solid hsla(150, 15%, 18%, 0.5);
-}
-
-/* Stagger animation */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.stagger-in {
-  animation: fadeInUp 0.6s ease forwards;
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: hsl(150, 15%, 6%);
-}
-::-webkit-scrollbar-thumb {
-  background: hsl(150, 15%, 18%);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(45, 60%, 60%);
 }

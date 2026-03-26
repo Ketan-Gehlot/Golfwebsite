@@ -1,78 +1,83 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-    darkMode: ["class"],
-    content: [
-    "./src/**/*.{js,jsx,ts,tsx}",
-    "./public/index.html"
-  ],
+  darkMode: ["class"],
+  content: ["./src/**/*.{js,jsx,ts,tsx}", "./public/index.html"],
   theme: {
-    fontFamily: {
-      sans: ['Outfit', 'sans-serif'],
-      serif: ['Cormorant Garamond', 'serif'],
-    },
     extend: {
-      borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)'
-      },
       colors: {
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
-        card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))'
-        },
-        popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))'
-        },
-        primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))'
-        },
-        secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))'
-        },
-        muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))'
-        },
-        accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))'
-        },
-        destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))'
-        },
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        chart: {
-          '1': 'hsl(var(--chart-1))',
-          '2': 'hsl(var(--chart-2))',
-          '3': 'hsl(var(--chart-3))',
-          '4': 'hsl(var(--chart-4))',
-          '5': 'hsl(var(--chart-5))'
-        }
+        "on-surface-variant": "#bcc9cd",
+        "on-secondary-container": "#c4abff",
+        "primary-container": "#06b6d4",
+        "surface-container": "#201f1f",
+        "tertiary": "#ffb95f",
+        "on-tertiary-fixed-variant": "#653e00",
+        "primary-fixed": "#acedff",
+        "on-error-container": "#ffdad6",
+        "surface": "#131313",
+        "on-primary-fixed-variant": "#004e5c",
+        "on-primary": "#003640",
+        "surface-tint": "#4cd7f6",
+        "error-container": "#93000a",
+        "outline": "#869397",
+        "primary": "#4cd7f6",
+        "on-secondary": "#3c0091",
+        "secondary-fixed-dim": "#d0bcff",
+        "inverse-primary": "#00687a",
+        "surface-container-low": "#1c1b1b",
+        "outline-variant": "#3d494c",
+        "tertiary-fixed-dim": "#ffb95f",
+        "on-tertiary": "#472a00",
+        "background": "#131313",
+        "surface-container-lowest": "#0e0e0e",
+        "on-primary-container": "#00424f",
+        "primary-fixed-dim": "#4cd7f6",
+        "on-tertiary-fixed": "#2a1700",
+        "on-background": "#e5e2e1",
+        "surface-dim": "#131313",
+        "tertiary-container": "#e79400",
+        "surface-variant": "#353534",
+        "tertiary-fixed": "#ffddb8",
+        "on-secondary-fixed-variant": "#5516be",
+        "on-secondary-fixed": "#23005c",
+        "secondary": "#d0bcff",
+        "on-error": "#690005",
+        "inverse-surface": "#e5e2e1",
+        "surface-container-highest": "#353534",
+        "surface-container-high": "#2a2a2a",
+        "inverse-on-surface": "#313030",
+        "secondary-container": "#571bc1",
+        "on-tertiary-container": "#563400",
+        "secondary-fixed": "#e9ddff",
+        "on-surface": "#e5e2e1",
+        "on-primary-fixed": "#001f26",
+        "surface-bright": "#3a3939",
+        "error": "#ffb4ab",
+        foreground: "#e5e2e1",
+        card: { DEFAULT: "#1c1b1b", foreground: "#e5e2e1" },
+        popover: { DEFAULT: "#1c1b1b", foreground: "#e5e2e1" },
+        muted: { DEFAULT: "#2a2a2a", foreground: "#bcc9cd" },
+        accent: { DEFAULT: "#2a2a2a", foreground: "#4cd7f6" },
+        destructive: { DEFAULT: "#ffb4ab", foreground: "#690005" },
+        border: "#3d494c",
+        input: "#353534",
+        ring: "#4cd7f6",
       },
-      keyframes: {
-        'accordion-down': {
-          from: { height: '0' },
-          to: { height: 'var(--radix-accordion-content-height)' }
-        },
-        'accordion-up': {
-          from: { height: 'var(--radix-accordion-content-height)' },
-          to: { height: '0' }
-        }
+      fontFamily: {
+        headline: ["Inter", "sans-serif"],
+        body: ["Inter", "sans-serif"],
+        label: ["Inter", "sans-serif"],
+        sans: ["Inter", "sans-serif"],
       },
-      animation: {
-        'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out'
-      }
-    }
+      borderRadius: {
+        DEFAULT: "0.25rem",
+        lg: "0.5rem",
+        xl: "0.75rem",
+        "2xl": "1rem",
+        "3xl": "1.5rem",
+        "4xl": "2rem",
+        full: "9999px",
+      },
+    },
   },
   plugins: [require("tailwindcss-animate")],
 };

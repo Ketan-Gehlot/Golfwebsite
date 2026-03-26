@@ -2,11 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { signup as signupApi } from '../lib/api';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { motion } from 'framer-motion';
-import { ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { MIcon } from '../components/MIcon';
 
 export default function SignupPage() {
   const [form, setForm] = useState({ email: '', password: '', first_name: '', last_name: '' });
@@ -18,75 +14,60 @@ export default function SignupPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    setError(''); setLoading(true);
     try {
       const res = await signupApi(form);
       loginUser(res.data.token, res.data.user);
       navigate('/subscription');
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Signup failed');
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setError(err.response?.data?.detail || 'Signup failed'); }
+    finally { setLoading(false); }
   };
 
   const update = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
   return (
-    <div className="min-h-screen animated-gradient-bg flex items-center justify-center px-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
-        <div className="mb-10">
-          <Link to="/" className="text-primary font-serif text-2xl tracking-tight">GolfCharity</Link>
-          <h1 className="font-serif text-4xl sm:text-5xl font-light tracking-tighter text-foreground mt-8 mb-2">
-            Join the<br /><span className="text-primary">Movement</span>
-          </h1>
-          <p className="text-sm text-muted-foreground">Create your account and start making a difference</p>
+    <div className="min-h-screen bg-surface flex items-center justify-center px-6">
+      <div className="w-full max-w-md">
+        <Link to="/" className="text-2xl font-bold tracking-tighter text-primary block mb-12" data-testid="nav-logo">The Kinetic</Link>
+        <div className="inline-flex items-center gap-2 bg-secondary-container/30 border border-outline-variant/20 px-4 py-1.5 rounded-full mb-8">
+          <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse" />
+          <span className="text-xs uppercase tracking-widest text-on-secondary-container">Join the Movement</span>
         </div>
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-on-surface mb-2">Start Your<br/><span className="text-primary">Impact</span></h1>
+        <p className="text-on-surface-variant mb-10">Create your account and make a difference</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div data-testid="signup-error" className="p-3 border border-destructive/30 bg-destructive/10 text-destructive text-sm rounded-sm">
-              {error}
-            </div>
-          )}
+          {error && <div data-testid="signup-error" className="p-4 rounded-xl bg-error-container/20 border border-error/20 text-error text-sm">{error}</div>}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="first_name" className="text-sm text-muted-foreground">First Name</Label>
-              <Input data-testid="signup-firstname-input" id="first_name" value={form.first_name} onChange={update('first_name')} required className="mt-1 bg-secondary/50 border-border/50" placeholder="John" />
+              <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">First Name</label>
+              <input data-testid="signup-firstname-input" value={form.first_name} onChange={update('first_name')} required className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 text-sm text-on-surface focus:ring-2 focus:ring-primary/30" placeholder="John" />
             </div>
             <div>
-              <Label htmlFor="last_name" className="text-sm text-muted-foreground">Last Name</Label>
-              <Input data-testid="signup-lastname-input" id="last_name" value={form.last_name} onChange={update('last_name')} required className="mt-1 bg-secondary/50 border-border/50" placeholder="Doe" />
+              <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Last Name</label>
+              <input data-testid="signup-lastname-input" value={form.last_name} onChange={update('last_name')} required className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 text-sm text-on-surface focus:ring-2 focus:ring-primary/30" placeholder="Doe" />
             </div>
           </div>
           <div>
-            <Label htmlFor="email" className="text-sm text-muted-foreground">Email</Label>
-            <Input data-testid="signup-email-input" id="email" type="email" value={form.email} onChange={update('email')} required className="mt-1 bg-secondary/50 border-border/50" placeholder="you@example.com" />
+            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Email</label>
+            <input data-testid="signup-email-input" type="email" value={form.email} onChange={update('email')} required className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 text-sm text-on-surface focus:ring-2 focus:ring-primary/30" placeholder="you@example.com" />
           </div>
           <div>
-            <Label htmlFor="password" className="text-sm text-muted-foreground">Password</Label>
-            <div className="relative mt-1">
-              <Input data-testid="signup-password-input" id="password" type={showPw ? 'text' : 'password'} value={form.password} onChange={update('password')} required className="bg-secondary/50 border-border/50 pr-10" placeholder="Min. 6 characters" />
-              <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Password</label>
+            <div className="relative">
+              <input data-testid="signup-password-input" type={showPw ? 'text' : 'password'} value={form.password} onChange={update('password')} required className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 text-sm text-on-surface focus:ring-2 focus:ring-primary/30 pr-12" placeholder="Min. 6 characters" />
+              <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors">
+                <MIcon icon={showPw ? 'visibility_off' : 'visibility'} size="text-xl" />
               </button>
             </div>
           </div>
-          <Button data-testid="signup-submit-btn" type="submit" disabled={loading} className="w-full gold-glow py-5 font-medium active:scale-95 transition-transform">
-            {loading ? 'Creating Account...' : 'Create Account'} <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+          <button data-testid="signup-submit-btn" type="submit" disabled={loading}
+            className="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary-container font-bold rounded-xl shadow-[0_0_40px_rgba(76,215,246,0.2)] hover:scale-[1.02] transition-transform ease-out-expo active:scale-95 disabled:opacity-50">
+            {loading ? 'Creating Account...' : 'Create Account'}
+          </button>
         </form>
-
-        <p className="mt-8 text-sm text-muted-foreground">
-          Already have an account?{' '}
-          <Link to="/login" data-testid="goto-login-link" className="text-primary hover:underline">Sign in</Link>
-        </p>
-      </motion.div>
+        <p className="mt-8 text-sm text-on-surface-variant">Already have an account? <Link to="/login" data-testid="goto-login-link" className="text-primary hover:underline font-bold">Sign in</Link></p>
+      </div>
     </div>
   );
 }
