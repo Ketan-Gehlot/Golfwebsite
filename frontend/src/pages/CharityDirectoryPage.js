@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-
+import React, { useEffect, useState, useCallback } from 'react';
 import { getCharities, setMyCharity, createDonationCheckout } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { MIcon } from '../components/MIcon';
@@ -23,11 +22,9 @@ export default function CharityDirectoryPage() {
   const [featured, setFeatured] = useState(null);
   const [selectedCharity, setSelectedCharity] = useState(null);
 
-  useEffect(() => {
-    loadCharities();
-  }, [search, activeFilter, loadCharities]);
+  useEffect(() => { loadCharities(); }, [loadCharities]);
 
-  const loadCharities = async () => {
+  const loadCharities = useCallback(async () => {
     try {
       const params = {};
       if (search) params.search = search;
@@ -38,7 +35,7 @@ export default function CharityDirectoryPage() {
       const feat = all.find(c => c.is_featured);
       if (feat) setFeatured(feat);
     } catch { }
-  };
+  }, [search, activeFilter]);
 
   const handleDonate = async (charityId) => {
     const amount = prompt('Enter donation amount (USD):', '25');

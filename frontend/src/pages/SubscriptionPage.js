@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getPlans, createCheckout, checkPaymentStatus } from '../lib/api';
@@ -17,9 +17,9 @@ export default function SubscriptionPage() {
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
     if (sessionId) pollPayment(sessionId);
-  }, [searchParams]);
+  }, [searchParams, pollPayment]);
 
-  const pollPayment = async (sessionId, attempt = 0) => {
+  const pollPayment = useCallback(async (sessionId, attempt = 0) => {
     if (attempt >= 6) { setPolling(false); return; }
     setPolling(true);
     try {
@@ -28,7 +28,7 @@ export default function SubscriptionPage() {
       if (res.data.status === 'expired') { setPolling(false); return; }
       setTimeout(() => pollPayment(sessionId, attempt + 1), 2000);
     } catch { setTimeout(() => pollPayment(sessionId, attempt + 1), 2000); }
-  };
+  }, [refreshUser, navigate]);
 
   const handleSubscribe = async (planId) => {
     setLoading(planId);

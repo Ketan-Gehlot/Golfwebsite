@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { checkPaymentStatus } from '../lib/api';
@@ -14,9 +14,9 @@ export default function SubscriptionSuccessPage() {
     const sessionId = searchParams.get('session_id');
     if (sessionId) pollPayment(sessionId);
     else setStatus('error');
-  }, []);
+  }, [searchParams, pollPayment]);
 
-  const pollPayment = async (sessionId, attempt = 0) => {
+  const pollPayment = useCallback(async (sessionId, attempt = 0) => {
     if (attempt >= 8) { setStatus('timeout'); return; }
     try {
       const res = await checkPaymentStatus(sessionId);
@@ -24,7 +24,7 @@ export default function SubscriptionSuccessPage() {
       if (res.data.status === 'expired') { setStatus('expired'); return; }
       setTimeout(() => pollPayment(sessionId, attempt + 1), 2000);
     } catch { setTimeout(() => pollPayment(sessionId, attempt + 1), 2000); }
-  };
+  }, [refreshUser]);
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-6">
