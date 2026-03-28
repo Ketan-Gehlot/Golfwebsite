@@ -13,6 +13,8 @@ import SubscriptionSuccessPage from "./pages/SubscriptionSuccessPage";
 import DashboardPage from "./pages/DashboardPage";
 import CharityDirectoryPage from "./pages/CharityDirectoryPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import DonationSuccessPage from "./pages/DonationSuccessPage";
+import LeaderboardPage from "./pages/LeaderboardPage";
 
 function App() {
   useEffect(() => {
@@ -32,6 +34,8 @@ function App() {
             <Route path="/subscription" element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
             <Route path="/subscription/success" element={<ProtectedRoute><SubscriptionSuccessPage /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+            <Route path="/donation/success" element={<ProtectedRoute><DonationSuccessPage /></ProtectedRoute>} />
+            <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           </Routes>
         </Layout>

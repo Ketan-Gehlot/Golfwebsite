@@ -47,6 +47,10 @@ export const getCharity = (id) => api.get(`/charities/${id}`);
 export const setMyCharity = (data) => api.post('/users/me/charity', data);
 export const getMyCharity = () => api.get('/users/me/charity');
 
+// Donations
+export const createDonationCheckout = (data) => api.post('/donations/checkout', data);
+export const checkDonationStatus = (sessionId) => api.get(`/donations/status/${sessionId}`);
+
 // Draws
 export const getDraws = () => api.get('/draws');
 export const getDraw = (id) => api.get(`/draws/${id}`);

@@ -63,10 +63,10 @@ module.exports = {
         ring: "#4cd7f6",
       },
       fontFamily: {
-        headline: ["Inter", "sans-serif"],
-        body: ["Inter", "sans-serif"],
-        label: ["Inter", "sans-serif"],
-        sans: ["Inter", "sans-serif"],
+        headline: ["Cormorant Garamond", "serif"],
+        body: ["Outfit", "sans-serif"],
+        sans: ["Outfit", "sans-serif"],
+        serif: ["Cormorant Garamond", "serif"],
       },
       borderRadius: {
         DEFAULT: "0.25rem",

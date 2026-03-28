@@ -13,6 +13,7 @@ from datetime import datetime, timezone, timedelta
 import bcrypt
 import jwt
 import random
+import stripe
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
@@ -165,6 +166,11 @@ class VerificationReview(BaseModel):
 class PayoutUpdate(BaseModel):
     payout_status: str  # paid
 
+class DonationRequest(BaseModel):
+    charity_id: str
+    amount: float = Field(gt=0)
+    origin_url: str
+
 class CheckoutRequest(BaseModel):
     plan_id: str
     origin_url: str
@@ -270,35 +276,41 @@ async def create_checkout(req: CheckoutRequest, user=Depends(get_current_user)):
         raise HTTPException(status_code=400, detail="Invalid plan")
     
     plan = SUBSCRIPTION_PLANS[req.plan_id]
-    
-    from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionRequest
+    stripe.api_key = STRIPE_API_KEY
     
     success_url = f"{req.origin_url}/subscription/success?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = f"{req.origin_url}/subscription"
     
-    webhook_url = f"{str(req.origin_url)}/api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
-    
-    checkout_req = CheckoutSessionRequest(
-        amount=float(plan["amount"]),
-        currency=plan["currency"],
-        success_url=success_url,
-        cancel_url=cancel_url,
-        metadata={
-            "user_id": user["id"],
-            "plan_id": req.plan_id,
-            "user_email": user["email"]
-        }
-    )
-    
-    session = await stripe_checkout.create_checkout_session(checkout_req)
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{
+                "price_data": {
+                    "currency": plan["currency"],
+                    "product_data": {"name": plan["name"]},
+                    "unit_amount": int(float(plan["amount"]) * 100),
+                },
+                "quantity": 1,
+            }],
+            mode="payment",
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={
+                "user_id": user["id"],
+                "plan_id": req.plan_id,
+                "user_email": user["email"]
+            },
+        )
+    except Exception as e:
+        logger.error(f"Stripe checkout error: {e}")
+        raise HTTPException(status_code=500, detail=f"Payment error: {str(e)}")
     
     # Create payment transaction record
     now = datetime.now(timezone.utc).isoformat()
     await db.payment_transactions.insert_one({
         "id": str(uuid.uuid4()),
         "user_id": user["id"],
-        "session_id": session.session_id,
+        "session_id": session.id,
         "amount": float(plan["amount"]),
         "currency": plan["currency"],
         "plan_id": req.plan_id,
@@ -307,11 +319,11 @@ async def create_checkout(req: CheckoutRequest, user=Depends(get_current_user)):
         "created_at": now,
     })
     
-    return {"url": session.url, "session_id": session.session_id}
+    return {"url": session.url, "session_id": session.id}
 
 @api_router.get("/subscriptions/status/{session_id}")
 async def check_payment_status(session_id: str, user=Depends(get_current_user)):
-    from emergentintegrations.payments.stripe.checkout import StripeCheckout
+    stripe.api_key = STRIPE_API_KEY
     
     transaction = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
     if not transaction:
@@ -321,15 +333,15 @@ async def check_payment_status(session_id: str, user=Depends(get_current_user)):
     if transaction.get("payment_status") == "paid":
         return {"status": "complete", "payment_status": "paid"}
     
-    host_url = "https://placeholder.com"
-    webhook_url = f"{host_url}/api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
-    
-    checkout_status = await stripe_checkout.get_checkout_status(session_id)
+    try:
+        checkout_session = stripe.checkout.Session.retrieve(session_id)
+    except Exception as e:
+        logger.error(f"Stripe status check error: {e}")
+        return {"status": "unknown", "payment_status": "unknown"}
     
     now = datetime.now(timezone.utc).isoformat()
     
-    if checkout_status.payment_status == "paid" and transaction.get("payment_status") != "paid":
+    if checkout_session.payment_status == "paid" and transaction.get("payment_status") != "paid":
         plan_id = transaction.get("plan_id", "monthly")
         plan = SUBSCRIPTION_PLANS.get(plan_id, SUBSCRIPTION_PLANS["monthly"])
         
@@ -369,48 +381,56 @@ async def check_payment_status(session_id: str, user=Depends(get_current_user)):
         
         return {"status": "complete", "payment_status": "paid"}
     
-    elif checkout_status.status == "expired":
+    elif checkout_session.status == "expired":
         await db.payment_transactions.update_one(
             {"session_id": session_id},
             {"$set": {"payment_status": "expired", "status": "expired"}}
         )
         return {"status": "expired", "payment_status": "expired"}
     
-    return {"status": checkout_status.status, "payment_status": checkout_status.payment_status}
+    return {"status": checkout_session.status, "payment_status": checkout_session.payment_status}
 
 @api_router.post("/webhook/stripe")
 async def stripe_webhook(request: Request):
+    stripe.api_key = STRIPE_API_KEY
     body = await request.body()
-    signature = request.headers.get("Stripe-Signature", "")
+    
     try:
-        from emergentintegrations.payments.stripe.checkout import StripeCheckout
-        host_url = str(request.base_url)
-        webhook_url = f"{host_url}api/webhook/stripe"
-        stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
-        webhook_response = await stripe_checkout.handle_webhook(body, signature)
+        # Parse the event directly (no webhook secret verification for dev)
+        import json
+        event = json.loads(body)
         
-        if webhook_response.payment_status == "paid":
-            session_id = webhook_response.session_id
-            transaction = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
-            if transaction and transaction.get("payment_status") != "paid":
-                now = datetime.now(timezone.utc).isoformat()
-                plan_id = transaction.get("plan_id", "monthly")
-                plan = SUBSCRIPTION_PLANS.get(plan_id, SUBSCRIPTION_PLANS["monthly"])
-                end_date = (datetime.now(timezone.utc) + timedelta(days=plan["days"])).isoformat()
-                
-                await db.payment_transactions.update_one(
+        if event.get("type") == "checkout.session.completed":
+            session_data = event["data"]["object"]
+            session_id = session_data["id"]
+            metadata = session_data.get("metadata", {})
+            
+            if metadata.get("type") == "independent_donation":
+                await db.donations.update_one(
                     {"session_id": session_id},
-                    {"$set": {"payment_status": "paid", "status": "completed", "completed_at": now}}
+                    {"$set": {"status": "completed", "completed_at": datetime.now(timezone.utc).isoformat()}}
                 )
-                await db.users.update_one(
-                    {"id": transaction["user_id"]},
-                    {"$set": {
-                        "subscription_status": "active",
-                        "subscription_plan": plan_id,
-                        "subscription_start_date": now,
-                        "subscription_end_date": end_date,
-                    }}
-                )
+            else:
+                transaction = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
+                if transaction and transaction.get("payment_status") != "paid":
+                    now = datetime.now(timezone.utc).isoformat()
+                    plan_id = transaction.get("plan_id", "monthly")
+                    plan = SUBSCRIPTION_PLANS.get(plan_id, SUBSCRIPTION_PLANS["monthly"])
+                    end_date = (datetime.now(timezone.utc) + timedelta(days=plan["days"])).isoformat()
+                    
+                    await db.payment_transactions.update_one(
+                        {"session_id": session_id},
+                        {"$set": {"payment_status": "paid", "status": "completed", "completed_at": now}}
+                    )
+                    await db.users.update_one(
+                        {"id": transaction["user_id"]},
+                        {"$set": {
+                            "subscription_status": "active",
+                            "subscription_plan": plan_id,
+                            "subscription_start_date": now,
+                            "subscription_end_date": end_date,
+                        }}
+                    )
         return {"status": "ok"}
     except Exception as e:
         logger.error(f"Webhook error: {e}")
@@ -433,6 +453,85 @@ async def cancel_subscription(user=Depends(get_current_user)):
         {"$set": {"subscription_status": "cancelled", "updated_at": now}}
     )
     return {"message": "Subscription cancelled"}
+
+# ============ DONATION SYSTEM ============
+
+@api_router.post("/donations/checkout")
+async def create_donation_checkout(req: DonationRequest, user=Depends(get_current_user)):
+    charity = await db.charities.find_one({"id": req.charity_id})
+    if not charity:
+        raise HTTPException(status_code=404, detail="Charity not found")
+    
+    stripe.api_key = STRIPE_API_KEY
+    
+    success_url = f"{req.origin_url}/donation/success?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{req.origin_url}/charities"
+    
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {"name": f"Donation to {charity['name']}"},
+                    "unit_amount": int(float(req.amount) * 100),
+                },
+                "quantity": 1,
+            }],
+            mode="payment",
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={
+                "user_id": user["id"],
+                "charity_id": req.charity_id,
+                "charity_name": charity["name"],
+                "type": "independent_donation"
+            },
+        )
+    except Exception as e:
+        logger.error(f"Stripe donation checkout error: {e}")
+        raise HTTPException(status_code=500, detail=f"Payment error: {str(e)}")
+    
+    # Create donation record
+    now = datetime.now(timezone.utc).isoformat()
+    await db.donations.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "charity_id": req.charity_id,
+        "charity_name": charity["name"],
+        "amount": float(req.amount),
+        "session_id": session.id,
+        "status": "pending",
+        "created_at": now,
+    })
+    
+    return {"url": session.url, "session_id": session.id}
+
+@api_router.get("/donations/status/{session_id}")
+async def check_donation_status(session_id: str, user=Depends(get_current_user)):
+    donation = await db.donations.find_one({"session_id": session_id}, {"_id": 0})
+    if not donation:
+        raise HTTPException(status_code=404, detail="Donation not found")
+    
+    if donation.get("status") == "completed":
+        return {"status": "complete"}
+    
+    stripe.api_key = STRIPE_API_KEY
+    try:
+        checkout_session = stripe.checkout.Session.retrieve(session_id)
+    except Exception as e:
+        logger.error(f"Stripe donation status error: {e}")
+        return {"status": "unknown"}
+    
+    if checkout_session.payment_status == "paid":
+        now = datetime.now(timezone.utc).isoformat()
+        await db.donations.update_one(
+            {"session_id": session_id},
+            {"$set": {"status": "completed", "completed_at": now}}
+        )
+        return {"status": "complete"}
+    
+    return {"status": checkout_session.status}
 
 # ============ SCORE MANAGEMENT ============
 
@@ -491,12 +590,17 @@ async def delete_score(score_id: str, user=Depends(get_current_user)):
 # ============ CHARITY SYSTEM ============
 
 @api_router.get("/charities")
-async def list_charities(search: Optional[str] = None, featured: Optional[bool] = None):
+async def list_charities(search: Optional[str] = None, featured: Optional[bool] = None, category: Optional[str] = None):
     query = {}
     if search:
-        query["name"] = {"$regex": search, "$options": "i"}
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}}
+        ]
     if featured is not None:
         query["is_featured"] = featured
+    if category:
+        query["category"] = category
     charities = await db.charities.find(query, {"_id": 0}).to_list(100)
     return {"charities": charities}
 

@@ -1,8 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getScores, addScore, deleteScore, getMyCharity, getCharities, setMyCharity, getDraws, enterDraw, getMyWinnings, submitVerification, cancelSubscription } from '../lib/api';
 import { MIcon } from '../components/MIcon';
+import { motion } from 'framer-motion';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i = 0) => ({
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.08, duration: 0.5, ease: [0.19, 1, 0.22, 1] }
+  })
+};
+const stagger = { visible: { transition: { staggerChildren: 0.1 } } };
 
 export default function DashboardPage() {
   const { user, refreshUser } = useAuth();
@@ -20,9 +30,20 @@ export default function DashboardPage() {
   const [proofUrl, setProofUrl] = useState('');
   const [activeSection, setActiveSection] = useState('dashboard');
 
+  const settingsRef = useRef(null);
+  const charityRef = useRef(null);
+  const scoresRef = useRef(null);
+  const drawsRef = useRef(null);
+
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab) setActiveSection(tab);
+    if (tab) {
+      setActiveSection(tab);
+      setTimeout(() => {
+        const refMap = { settings: settingsRef, charity: charityRef, scores: scoresRef, draws: drawsRef };
+        refMap[tab]?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+    }
     loadData();
   }, [searchParams]);
 
@@ -85,7 +106,7 @@ export default function DashboardPage() {
   const subActive = user?.subscription_status === 'active';
 
   return (
-    <div className="pt-10 pb-32 px-6 md:px-12 max-w-7xl mx-auto">
+    <div className="pt-10 pb-32 px-6 md:px-12 max-w-7xl mx-auto overflow-x-hidden">
       {/* Welcome Header */}
       <header className="mb-12">
         <h1 className="text-4xl md:text-5xl font-black tracking-tight text-on-surface mb-2" data-testid="dashboard-title">Impact Dashboard</h1>
@@ -107,10 +128,10 @@ export default function DashboardPage() {
       )}
 
       {/* Bento Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+      <motion.div className="grid grid-cols-1 md:grid-cols-12 gap-6" initial="hidden" animate="visible" variants={stagger}>
 
         {/* Subscription & Status */}
-        <section className="md:col-span-8 bg-surface-container-low rounded-[2rem] p-8 border border-outline-variant/10 relative overflow-hidden group" data-testid="subscription-card">
+        <motion.section variants={fadeUp} className="md:col-span-8 bg-surface-container-low rounded-[2rem] p-8 border border-outline-variant/10 relative overflow-hidden group" data-testid="subscription-card">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] rounded-full -mr-20 -mt-20" />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
             <div>
@@ -135,10 +156,10 @@ export default function DashboardPage() {
             <div><p className="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Draws Entered</p><p className="text-2xl font-bold text-on-surface">{winnings?.entries?.length || 0}</p></div>
             <div><p className="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Scores</p><p className="text-2xl font-bold text-tertiary">{scores.length}/5</p></div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Charity Profile */}
-        <section className="md:col-span-4 bg-surface-container-high rounded-[2rem] p-8 border border-outline-variant/10 flex flex-col justify-between overflow-hidden relative" data-testid="charity-card">
+        <motion.section variants={fadeUp} className="md:col-span-4 bg-surface-container-high rounded-[2rem] p-8 border border-outline-variant/10 flex flex-col justify-between overflow-hidden relative" data-testid="charity-card">
           <div className="relative z-10">
             <div className="flex justify-between items-start mb-6">
               <div className="p-3 bg-surface-container-highest rounded-2xl">
@@ -162,10 +183,10 @@ export default function DashboardPage() {
               </>
             )}
           </div>
-        </section>
+        </motion.section>
 
         {/* Score Entry */}
-        <section className="md:col-span-5 bg-surface-container-low rounded-[2rem] p-8 border border-outline-variant/10" data-testid="score-entry-section">
+        <motion.section variants={fadeUp} className="md:col-span-5 bg-surface-container-low rounded-[2rem] p-8 border border-outline-variant/10" data-testid="score-entry-section">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-xl font-bold">Stableford Entry</h3>
             <MIcon icon="query_stats" className="text-primary" />
@@ -212,10 +233,10 @@ export default function DashboardPage() {
               ))
             )}
           </div>
-        </section>
+        </motion.section>
 
         {/* Draw History */}
-        <section className="md:col-span-7 bg-surface-container-low rounded-[2rem] p-8 border border-outline-variant/10" data-testid="draw-history-section">
+        <motion.section variants={fadeUp} className="md:col-span-7 bg-surface-container-low rounded-[2rem] p-8 border border-outline-variant/10" data-testid="draw-history-section">
           <h3 className="text-xl font-bold mb-8">Draw History</h3>
           {draws.length === 0 ? (
             <p className="text-sm text-on-surface-variant py-8">No draws available yet. Check back soon!</p>
@@ -279,10 +300,10 @@ export default function DashboardPage() {
               ))}
             </div>
           )}
-        </section>
+        </motion.section>
 
         {/* Charity Selection (full width) */}
-        <section className="md:col-span-12 bg-surface-container-low rounded-[2rem] p-8 border border-outline-variant/10" data-testid="charity-selection-section">
+        <motion.section ref={charityRef} variants={fadeUp} className="md:col-span-12 bg-surface-container-low rounded-[2rem] p-8 border border-outline-variant/10" data-testid="charity-selection-section">
           <h3 className="text-xl font-bold mb-6">Choose Your Charity</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
@@ -302,10 +323,10 @@ export default function DashboardPage() {
               </button>
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Settings */}
-        <section className="md:col-span-12 bg-surface-container-low rounded-[2rem] p-8 border border-outline-variant/10" data-testid="settings-section">
+        <motion.section ref={settingsRef} variants={fadeUp} className="md:col-span-12 bg-surface-container-low rounded-[2rem] p-8 border border-outline-variant/10" data-testid="settings-section">
           <h3 className="text-xl font-bold mb-6">Account Settings</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl">
             <div className="p-4 bg-surface-container rounded-2xl">
@@ -324,8 +345,8 @@ export default function DashboardPage() {
           {subActive && (
             <button onClick={handleCancelSub} className="mt-6 px-6 py-3 border border-error/30 text-error rounded-xl font-bold text-sm hover:bg-error/10 transition-colors" data-testid="cancel-subscription-btn">Cancel Subscription</button>
           )}
-        </section>
-      </div>
+        </motion.section>
+      </motion.div>
     </div>
   );
 }

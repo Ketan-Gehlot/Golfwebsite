@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { adminGetUsers, adminUpdateUser, adminGetAnalytics, adminCreateCharity, adminDeleteCharity, getCharities, adminCreateDraw, adminSimulateDraw, adminPublishDraw, getDraws, adminGetWinners, adminReviewWinner, adminMarkPayout } from '../lib/api';
 import { MIcon } from '../components/MIcon';
+import { motion } from 'framer-motion';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i = 0) => ({
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.08, duration: 0.5, ease: [0.19, 1, 0.22, 1] }
+  })
+};
+const stagger = { visible: { transition: { staggerChildren: 0.1 } } };
 
 export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState(null);
@@ -54,7 +64,7 @@ export default function AdminDashboard() {
       <section className="mb-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
           <div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-2" data-testid="admin-title">Platform Control</h1>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-2 font-headline" data-testid="admin-title">Platform Control</h1>
             <p className="text-on-surface-variant max-w-xl">Real-time metrics and operational management for the Kinetic Impact network.</p>
           </div>
           <div className="flex gap-4">
@@ -66,22 +76,23 @@ export default function AdminDashboard() {
 
         {/* Analytics */}
         {analytics && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard label="Total Subscribers" value={analytics.total_users} change="+12%" />
-            <StatCard label="Current Prize Pool" value={`$${analytics.current_prize_pool?.toFixed(2)}`} badge="Live" badgeColor="text-tertiary" />
-            <div className="md:col-span-2 p-6 rounded-2xl bg-surface-container-low border border-outline-variant/10 flex justify-between items-center">
-              <div>
-                <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-4">Total Charity Impact</p>
-                <h3 className="text-3xl font-black text-primary" data-testid="analytics-revenue">${analytics.total_revenue?.toFixed(2)}</h3>
-                <p className="text-xs text-on-surface-variant mt-2">Engineering change across {analytics.total_charities} foundations.</p>
+          <motion.div className="grid grid-cols-1 md:grid-cols-4 gap-6" initial="hidden" animate="visible" variants={stagger}>
+            <motion.div variants={fadeUp}><StatCard label="Total Subscribers" value={analytics.total_users} change={`${analytics.active_subscribers} active`} /></motion.div>
+            <motion.div variants={fadeUp}><StatCard label="Current Prize Pool" value={`$${analytics.current_prize_pool?.toFixed(2)}`} badge="Live" badgeColor="text-tertiary" /></motion.div>
+            <motion.div variants={fadeUp}><StatCard label="Total Draws" value={analytics.total_draws} change={`${analytics.total_winners} winners`} /></motion.div>
+            <motion.div variants={fadeUp}>
+              <div className="p-6 rounded-2xl bg-surface-container-low border border-outline-variant/10 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-500" />
+                <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-4">Total Revenue</p>
+                <h3 className="text-3xl font-black text-primary font-headline" data-testid="analytics-revenue">${analytics.total_revenue?.toFixed(2)}</h3>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {Object.entries(analytics.charity_distribution || {}).slice(0, 3).map(([name, count]) => (
+                    <span key={name} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">{name}: {count}</span>
+                  ))}
+                </div>
               </div>
-              <div className="hidden sm:flex flex-wrap gap-2 max-w-[200px] justify-end">
-                <span className="px-3 py-1 rounded-full bg-secondary-container/20 text-on-secondary-container text-[10px] font-bold">Education</span>
-                <span className="px-3 py-1 rounded-full bg-tertiary/10 text-tertiary text-[10px] font-bold">Climate</span>
-                <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold">Water</span>
-              </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
       </section>
 
@@ -248,6 +259,7 @@ export default function AdminDashboard() {
                   <th className="px-8 py-5 text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Subscriber</th>
                   <th className="px-8 py-5 text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Status</th>
                   <th className="px-8 py-5 text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Plan</th>
+                  <th className="px-8 py-5 text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Renewal</th>
                   <th className="px-8 py-5 text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Admin</th>
                 </tr>
               </thead>
@@ -271,6 +283,16 @@ export default function AdminDashboard() {
                       </span>
                     </td>
                     <td className="px-8 py-6 text-sm text-on-surface-variant capitalize">{u.subscription_plan || '--'}</td>
+                    <td className="px-8 py-6">
+                      {u.subscription_end_date ? (
+                        <span className={`text-xs font-bold ${new Date(u.subscription_end_date) < new Date() ? 'text-error' : 'text-primary'}`}>
+                          {new Date(u.subscription_end_date).toLocaleDateString()}
+                          {new Date(u.subscription_end_date) < new Date() && <span className="ml-1 text-[10px]">EXPIRED</span>}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-on-surface-variant">--</span>
+                      )}
+                    </td>
                     <td className="px-8 py-6">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${u.is_admin ? 'bg-secondary/10 text-secondary' : 'text-on-surface-variant'}`}>
                         {u.is_admin ? 'ADMIN' : 'USER'}

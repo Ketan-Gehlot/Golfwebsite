@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { MIcon } from './MIcon';
@@ -7,7 +7,18 @@ export default function Layout({ children }) {
   const { user, logoutUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = () => { logoutUser(); navigate('/'); };
 
@@ -37,16 +48,9 @@ export default function Layout({ children }) {
           The Kinetic
         </Link>
         <div className="hidden md:flex items-center gap-8 font-medium text-sm tracking-tight">
-          {isLandingPage ? (
-            <>
-              <Link to="/charities" className="text-on-surface-variant hover:text-primary transition-colors" data-testid="nav-charities">Charities</Link>
-            </>
-          ) : (
-            <>
-              <Link to="/dashboard" className={`${isActive('/dashboard') ? 'text-primary border-b-2 border-primary pb-1' : 'text-on-surface-variant hover:text-primary'} transition-colors`} data-testid="nav-draws">Draws</Link>
-              <Link to="/charities" className={`${isActive('/charities') ? 'text-primary border-b-2 border-primary pb-1' : 'text-on-surface-variant hover:text-primary'} transition-colors`} data-testid="nav-charities">Charities</Link>
-            </>
-          )}
+          <Link to={user ? '/dashboard' : '/login'} className={`${isActive('/dashboard') ? 'text-primary border-b-2 border-primary pb-1' : 'text-on-surface-variant hover:text-primary'} transition-colors`} data-testid="nav-draws">Draws</Link>
+          <Link to="/charities" className={`${isActive('/charities') ? 'text-primary border-b-2 border-primary pb-1' : 'text-on-surface-variant hover:text-primary'} transition-colors`} data-testid="nav-charities">Charities</Link>
+          <Link to={user ? '/leaderboard' : '/login'} className={`${isActive('/leaderboard') ? 'text-primary border-b-2 border-primary pb-1' : 'text-on-surface-variant hover:text-primary'} transition-colors`} data-testid="nav-leaderboard">Leaderboard</Link>
         </div>
         <div className="flex items-center gap-4">
           {user ? (
@@ -56,19 +60,21 @@ export default function Layout({ children }) {
                   Upgrade
                 </button>
               )}
-              <div className="relative group">
-                <button className="text-on-surface-variant cursor-pointer hover:text-primary transition-colors" data-testid="user-menu-btn">
+              <div className="relative" ref={userMenuRef}>
+                <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="text-on-surface-variant cursor-pointer hover:text-primary transition-colors" data-testid="user-menu-btn">
                   <MIcon icon="account_circle" />
                 </button>
-                <div className="hidden group-hover:block absolute right-0 top-full mt-2 w-48 bg-surface-container-high rounded-xl border border-outline-variant/20 shadow-2xl overflow-hidden z-50">
-                  <div className="px-4 py-3 border-b border-outline-variant/10">
-                    <p className="text-sm font-bold text-on-surface">{user.first_name} {user.last_name}</p>
-                    <p className="text-[10px] text-on-surface-variant">{user.email}</p>
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-surface-container-high rounded-xl border border-outline-variant/20 shadow-2xl overflow-hidden z-50">
+                    <div className="px-4 py-3 border-b border-outline-variant/10">
+                      <p className="text-sm font-bold text-on-surface">{user.first_name} {user.last_name}</p>
+                      <p className="text-[10px] text-on-surface-variant">{user.email}</p>
+                    </div>
+                    <Link to="/dashboard" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors" data-testid="menu-dashboard">Dashboard</Link>
+                    {user.is_admin && <Link to="/admin" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors" data-testid="menu-admin">Admin Panel</Link>}
+                    <button onClick={() => { setUserMenuOpen(false); handleLogout(); }} className="block w-full text-left px-4 py-2.5 text-sm text-error hover:bg-surface-container-highest transition-colors" data-testid="menu-logout">Sign Out</button>
                   </div>
-                  <Link to="/dashboard" className="block px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors" data-testid="menu-dashboard">Dashboard</Link>
-                  {user.is_admin && <Link to="/admin" className="block px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors" data-testid="menu-admin">Admin Panel</Link>}
-                  <button onClick={handleLogout} className="block w-full text-left px-4 py-2.5 text-sm text-error hover:bg-surface-container-highest transition-colors" data-testid="menu-logout">Sign Out</button>
-                </div>
+                )}
               </div>
             </>
           ) : (
@@ -128,13 +134,13 @@ export default function Layout({ children }) {
             <MIcon icon="dashboard" size="text-xl" />
             <span className="text-[10px] font-semibold uppercase tracking-widest mt-1">Dashboard</span>
           </Link>
-          <Link to="/dashboard?tab=scores" className="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary active:scale-90 duration-200" data-testid="mobile-nav-scores">
-            <MIcon icon="query_stats" size="text-xl" />
-            <span className="text-[10px] font-semibold uppercase tracking-widest mt-1">Scores</span>
-          </Link>
           <Link to="/charities" className={`flex flex-col items-center justify-center p-2 min-w-[64px] ${isActive('/charities') ? 'bg-gradient-to-br from-primary to-primary-container text-surface rounded-2xl' : 'text-on-surface-variant hover:text-primary'} active:scale-90 duration-200`} data-testid="mobile-nav-charity">
             <MIcon icon="volunteer_activism" size="text-xl" />
-            <span className="text-[10px] font-semibold uppercase tracking-widest mt-1">Charity</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest mt-1">Charities</span>
+          </Link>
+          <Link to="/leaderboard" className={`flex flex-col items-center justify-center p-2 min-w-[64px] ${isActive('/leaderboard') ? 'bg-gradient-to-br from-primary to-primary-container text-surface rounded-2xl' : 'text-on-surface-variant hover:text-primary'} active:scale-90 duration-200`} data-testid="mobile-nav-leaderboard">
+            <MIcon icon="leaderboard" size="text-xl" />
+            <span className="text-[10px] font-semibold uppercase tracking-widest mt-1">Leaderboard</span>
           </Link>
         </nav>
       )}
