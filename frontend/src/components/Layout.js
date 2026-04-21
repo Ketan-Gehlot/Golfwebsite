@@ -32,12 +32,12 @@ export default function Layout({ children }) {
 
   const sideNavLinks = [
     { path: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
-    { path: '/dashboard', icon: 'edit_note', label: 'Score Entry', hash: 'scores' },
+    { path: '/scores', icon: 'edit_note', label: 'Score Entry' },
     { path: '/subscription', icon: 'card_membership', label: 'Subscription' },
     { path: '/charities', icon: 'volunteer_activism', label: 'Charities' },
-    { path: '/dashboard', icon: 'military_tech', label: 'Draw History', hash: 'draws' },
+    { path: '/draws', icon: 'military_tech', label: 'Draw History' },
     ...(user?.is_admin ? [{ path: '/admin', icon: 'admin_panel_settings', label: 'Admin' }] : []),
-    { path: '/dashboard', icon: 'settings', label: 'Settings', hash: 'settings' },
+    { path: '/settings', icon: 'settings', label: 'Settings' },
   ];
 
   return (
@@ -116,7 +116,7 @@ export default function Layout({ children }) {
             })}
           </nav>
 
-          <button onClick={() => navigate('/dashboard?tab=scores')} className="mt-auto w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-xl active:scale-95 transition-all" data-testid="sidebar-enter-score">
+          <button onClick={() => navigate('/scores')} className="mt-auto w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-xl active:scale-95 transition-all" data-testid="sidebar-enter-score">
             Enter Score
           </button>
         </aside>

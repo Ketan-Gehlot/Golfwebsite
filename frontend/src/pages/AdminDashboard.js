@@ -59,7 +59,7 @@ export default function AdminDashboard() {
   const filteredUsers = users.filter(u => !searchUser || u.email?.includes(searchUser) || u.first_name?.toLowerCase().includes(searchUser.toLowerCase()));
 
   return (
-    <div className="pt-10 pb-24 px-6 md:px-12 min-h-screen max-w-7xl">
+    <div className="pt-10 pb-24 px-6 md:px-12 min-h-screen max-w-7xl mx-auto">
       {/* Header */}
       <section className="mb-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">

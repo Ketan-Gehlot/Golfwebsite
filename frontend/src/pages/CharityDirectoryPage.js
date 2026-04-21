@@ -22,8 +22,6 @@ export default function CharityDirectoryPage() {
   const [featured, setFeatured] = useState(null);
   const [selectedCharity, setSelectedCharity] = useState(null);
 
-  useEffect(() => { loadCharities(); }, [loadCharities]);
-
   const loadCharities = useCallback(async () => {
     try {
       const params = {};
@@ -36,6 +34,8 @@ export default function CharityDirectoryPage() {
       if (feat) setFeatured(feat);
     } catch { }
   }, [search, activeFilter]);
+
+  useEffect(() => { loadCharities(); }, [loadCharities]);
 
   const handleDonate = async (charityId) => {
     const amount = prompt('Enter donation amount (USD):', '25');
@@ -59,7 +59,7 @@ export default function CharityDirectoryPage() {
   };
 
   return (
-    <div className="pt-10 pb-32 px-6 md:px-12 max-w-7xl">
+    <div className="pt-10 pb-32 px-6 md:px-12 max-w-7xl mx-auto">
       {/* Featured Charity */}
       {featured && (
         <motion.section className="mb-16" initial="hidden" animate="visible" variants={fadeUp}>

@@ -10,12 +10,6 @@ export default function SubscriptionSuccessPage() {
   const navigate = useNavigate();
   const [status, setStatus] = useState('polling');
 
-  useEffect(() => {
-    const sessionId = searchParams.get('session_id');
-    if (sessionId) pollPayment(sessionId);
-    else setStatus('error');
-  }, [searchParams, pollPayment]);
-
   const pollPayment = useCallback(async (sessionId, attempt = 0) => {
     if (attempt >= 8) { setStatus('timeout'); return; }
     try {
@@ -25,6 +19,12 @@ export default function SubscriptionSuccessPage() {
       setTimeout(() => pollPayment(sessionId, attempt + 1), 2000);
     } catch { setTimeout(() => pollPayment(sessionId, attempt + 1), 2000); }
   }, [refreshUser]);
+
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id');
+    if (sessionId) pollPayment(sessionId);
+    else setStatus('error');
+  }, [searchParams, pollPayment]);
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-6">

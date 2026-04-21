@@ -14,11 +14,6 @@ export default function SubscriptionPage() {
 
   useEffect(() => { getPlans().then(res => setPlans(res.data.plans)).catch(() => {}); }, []);
 
-  useEffect(() => {
-    const sessionId = searchParams.get('session_id');
-    if (sessionId) pollPayment(sessionId);
-  }, [searchParams, pollPayment]);
-
   const pollPayment = useCallback(async (sessionId, attempt = 0) => {
     if (attempt >= 6) { setPolling(false); return; }
     setPolling(true);
@@ -29,6 +24,11 @@ export default function SubscriptionPage() {
       setTimeout(() => pollPayment(sessionId, attempt + 1), 2000);
     } catch { setTimeout(() => pollPayment(sessionId, attempt + 1), 2000); }
   }, [refreshUser, navigate]);
+
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id');
+    if (sessionId) pollPayment(sessionId);
+  }, [searchParams, pollPayment]);
 
   const handleSubscribe = async (planId) => {
     setLoading(planId);

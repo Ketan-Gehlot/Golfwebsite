@@ -681,7 +681,8 @@ async def get_draw(draw_id: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="Draw not found")
     result = await db.draw_results.find_one({"draw_id": draw_id}, {"_id": 0})
     user_entry = await db.draw_entries.find_one({"draw_id": draw_id, "user_id": user["id"]}, {"_id": 0})
-    return {"draw": draw, "result": result, "user_entry": user_entry}
+    winners = await db.draw_entries.find({"draw_id": draw_id, "is_winner": True}, {"_id": 0, "user_name": 1, "match_count": 1, "winnings_amount": 1}).to_list(100)
+    return {"draw": draw, "result": result, "user_entry": user_entry, "winners": winners}
 
 @api_router.post("/draws/{draw_id}/enter")
 async def enter_draw(draw_id: str, user=Depends(get_current_user)):
