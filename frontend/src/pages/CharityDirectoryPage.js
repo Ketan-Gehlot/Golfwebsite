@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getCharities, setMyCharity, createDonationCheckout } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { MIcon } from '../components/MIcon';
@@ -16,6 +17,7 @@ const fadeUp = {
 
 export default function CharityDirectoryPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [charities, setCharitiesList] = useState([]);
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('All Causes');
@@ -142,49 +144,85 @@ export default function CharityDirectoryPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.06, duration: 0.4, ease: [0.19, 1, 0.22, 1] }}
-            className="group bg-surface-container-low rounded-[2rem] overflow-hidden flex flex-col hover:translate-y-[-4px] transition-all duration-300 border border-outline-variant/10"
+            className="group bg-surface-container-low rounded-2xl overflow-hidden flex flex-col hover:translate-y-[-4px] transition-all duration-300 border border-outline-variant/10 hover:border-primary/15"
             data-testid={`charity-card-${charity.id}`}
           >
-            {charity.images?.[0] && (
-              <div className="relative h-56 w-full overflow-hidden cursor-pointer" onClick={() => setSelectedCharity(charity)}>
+            {/* Image or Placeholder */}
+            <div className="relative h-44 w-full overflow-hidden cursor-pointer" onClick={() => setSelectedCharity(charity)}>
+              {charity.images?.[0] ? (
                 <img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt={charity.name} src={charity.images[0]} />
+              ) : (
+                <div className="w-full h-full bg-surface-container-high flex items-center justify-center">
+                  <MIcon icon="volunteer_activism" className="text-on-surface-variant/30" size="text-5xl" />
+                </div>
+              )}
+              {/* Badges */}
+              <div className="absolute top-3 left-3 flex items-center gap-2">
                 {charity.is_featured && (
-                  <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1 bg-surface-variant/80 backdrop-blur-md rounded-lg text-[10px] font-bold text-on-surface tracking-widest uppercase">Featured</span>
-                  </div>
+                  <span className="px-2 py-0.5 bg-tertiary/90 backdrop-blur-md rounded-lg text-[9px] font-bold text-on-tertiary tracking-widest uppercase flex items-center gap-1">
+                    <MIcon icon="star" size="text-xs" fill /> Featured
+                  </span>
+                )}
+                {charity.category && (
+                  <span className="px-2 py-0.5 bg-surface/70 backdrop-blur-md rounded-lg text-[9px] font-bold text-on-surface tracking-wider uppercase">
+                    {charity.category}
+                  </span>
                 )}
               </div>
-            )}
-            <div className="p-8 flex flex-col flex-grow">
-              <h3 className="text-xl font-bold mb-3 text-on-background cursor-pointer hover:text-primary transition-colors" onClick={() => setSelectedCharity(charity)}>{charity.name}</h3>
-              <p className="text-sm text-on-surface-variant mb-6 line-clamp-3">{charity.description}</p>
+            </div>
 
+            {/* Content */}
+            <div className="p-5 flex flex-col flex-grow">
+              {/* Logo + Name */}
+              <div className="flex items-start gap-3 mb-2">
+                {charity.logo_url && (
+                  <img src={charity.logo_url} alt="" className="w-9 h-9 rounded-lg object-cover flex-shrink-0 border border-outline-variant/20" />
+                )}
+                <h3 className="text-base font-bold text-on-background cursor-pointer hover:text-primary transition-colors leading-snug" onClick={() => setSelectedCharity(charity)}>
+                  {charity.name}
+                </h3>
+              </div>
+              <p className="text-xs text-on-surface-variant mb-4 line-clamp-2 leading-relaxed">{charity.description}</p>
+
+              {/* Events */}
               {charity.upcoming_events?.length > 0 && (
-                <div className="mb-4">
-                  {charity.upcoming_events.map((ev, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs text-on-surface-variant mb-1">
-                      <MIcon icon="event" size="text-sm" className="text-primary" /> {ev.name} - {ev.date}
+                <div className="mb-3">
+                  {charity.upcoming_events.slice(0, 1).map((ev, i) => (
+                    <div key={i} className="flex items-center gap-2 text-[11px] text-on-surface-variant">
+                      <MIcon icon="event" size="text-xs" className="text-primary" /> {ev.name} — {ev.date}
                     </div>
                   ))}
                 </div>
               )}
 
-              <div className="mt-auto space-y-3">
-                <button onClick={() => setSelectedCharity(charity)}
-                  className="w-full py-3 bg-surface-container-highest text-on-surface-variant font-bold rounded-xl hover:bg-surface-bright transition-all active:scale-95 text-sm"
-                  data-testid={`view-charity-${charity.id}`}>
-                  View Profile
-                </button>
-                <button onClick={() => user ? handleSetCharity(charity.id) : null}
-                  className="w-full py-3 bg-surface-container-highest text-primary font-bold rounded-xl hover:bg-primary hover:text-on-primary transition-all active:scale-95"
-                  data-testid={`select-charity-${charity.id}`}>
-                  {user ? 'Set as My Charity' : 'Explore Mission'}
-                </button>
-                <button onClick={() => handleDonate(charity.id)}
-                  className="w-full py-3 border border-primary/30 text-primary font-bold rounded-xl hover:bg-primary/10 transition-all active:scale-95"
-                  data-testid={`donate-charity-${charity.id}`}>
-                  Independent Donation
-                </button>
+              {/* Website link */}
+              {charity.website_url && (
+                <a href={charity.website_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[11px] text-primary hover:underline mb-3">
+                  <MIcon icon="language" size="text-xs" /> Visit Website
+                </a>
+              )}
+
+              {/* Action Buttons */}
+              <div className="mt-auto space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => setSelectedCharity(charity)}
+                    className="py-2 bg-surface-container-highest text-on-surface-variant font-semibold rounded-lg hover:bg-surface-bright transition-all active:scale-95 text-xs"
+                    data-testid={`view-charity-${charity.id}`}>
+                    View Profile
+                  </button>
+                  <button onClick={() => user ? handleSetCharity(charity.id) : navigate('/signup')}
+                    className="py-2 bg-surface-container-highest text-primary font-semibold rounded-lg hover:bg-primary hover:text-on-primary transition-all active:scale-95 text-xs"
+                    data-testid={`select-charity-${charity.id}`}>
+                    {user ? 'Set as Mine' : 'Join to Support'}
+                  </button>
+                </div>
+                {user && (
+                  <button onClick={() => handleDonate(charity.id)}
+                    className="w-full py-2 border border-primary/20 text-primary font-semibold rounded-lg hover:bg-primary/10 transition-all active:scale-95 text-xs"
+                    data-testid={`donate-charity-${charity.id}`}>
+                    <MIcon icon="favorite" size="text-xs" className="mr-1" /> Donate Directly
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>

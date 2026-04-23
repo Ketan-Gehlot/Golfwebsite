@@ -38,7 +38,7 @@ export default function LandingPage() {
             <span className="text-xs font-body uppercase tracking-widest text-on-secondary-container">The Philanthropic Player</span>
           </motion.div>
           <motion.h1 variants={fadeUp} custom={1} className="text-[3.5rem] md:text-[5rem] leading-[1.05] font-bold tracking-tighter mb-8 bg-clip-text text-transparent bg-gradient-to-b from-on-surface to-on-surface-variant font-headline" data-testid="hero-title">
-            Golf with a Heart,<br/>Play with Purpose.
+            Golf with a Heart,<br />Play with Purpose.
           </motion.h1>
           <motion.p variants={fadeUp} custom={2} className="text-xl text-on-surface-variant max-w-xl mb-12 leading-relaxed">
             Transform every scorecard into a catalyst for change. Join an elite community of golfers turning professional passion into humanitarian impact.
@@ -228,7 +228,7 @@ export default function LandingPage() {
             </div>
           </motion.div>
           <motion.div variants={fadeUp}>
-            <h2 className="text-5xl font-bold tracking-tighter mb-8 font-headline">Direct Impact.<br/>Real Stories.</h2>
+            <h2 className="text-5xl font-bold tracking-tighter mb-8 font-headline">Direct Impact.<br />Real Stories.</h2>
             <p className="text-xl text-on-surface-variant leading-relaxed mb-12">
               We believe in transparency. Choose exactly where your kinetic energy goes—from reforestation and clean water to local youth sports development.
             </p>
@@ -249,34 +249,87 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Pricing Section */}
-      <section className="py-32 px-8 max-w-5xl mx-auto text-center">
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={stagger}>
-          <motion.h2 variants={fadeUp} className="text-4xl font-bold mb-4 font-headline">Choose Your Impact Level</motion.h2>
-          <motion.p variants={fadeUp} className="text-on-surface-variant mb-16">Select the plan that aligns with your passion and purpose.</motion.p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <motion.div variants={fadeUp} className="bg-surface-container-low p-12 rounded-[2.5rem] border border-outline-variant/10 hover:scale-[1.02] transition-transform ease-out-expo">
-              <div className="text-on-surface-variant font-body uppercase tracking-widest mb-4">Standard Kinetic</div>
-              <div className="text-6xl font-bold mb-4 font-headline">$9.99<span className="text-xl text-on-surface-variant font-normal">/mo</span></div>
-              <p className="text-on-surface-variant mb-8">Fuel the mission monthly.</p>
-              <ul className="space-y-4 mb-12 text-left">
-                <li className="flex items-center gap-3"><MIcon icon="check" className="text-primary" size="text-xl" /> 1 Monthly Draw Entry</li>
-                <li className="flex items-center gap-3"><MIcon icon="check" className="text-primary" size="text-xl" /> Performance Score Tracking</li>
-                <li className="flex items-center gap-3"><MIcon icon="check" className="text-primary" size="text-xl" /> Monthly Impact Reports</li>
+      {/* Pricing Section — 3 Tiers */}
+      <section className="py-20 px-8 max-w-6xl mx-auto">
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={stagger}>
+          <motion.div variants={fadeUp} className="text-center mb-10">
+            <p className="text-xs font-body uppercase tracking-[0.2em] text-primary mb-3">Membership Plans</p>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tighter font-headline mb-2">Choose Your Impact Level</h2>
+            <p className="text-on-surface-variant text-sm max-w-md mx-auto">Every paid plan funds charities & enters you into monthly prize draws.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Explorer — Free */}
+            <motion.div variants={fadeUp} className="flex flex-col rounded-2xl bg-surface-container-low border border-outline-variant/15 p-5 hover:-translate-y-1 transition-all duration-300">
+              <div className="w-9 h-9 rounded-lg bg-on-surface-variant/10 flex items-center justify-center mb-3">
+                <MIcon icon="explore" className="text-on-surface-variant" size="text-lg" />
+              </div>
+              <h3 className="text-base font-bold text-on-surface">Explorer</h3>
+              <p className="text-[11px] text-on-surface-variant mb-3">Discover the platform</p>
+              <div className="text-3xl font-bold text-on-surface font-headline mb-1">Free</div>
+              <div className="text-[11px] text-on-surface-variant mb-4">No card required</div>
+              <ul className="space-y-2 mb-5 flex-1">
+                {[
+                  { icon: 'visibility', text: 'Browse charity directory' },
+                  { icon: 'leaderboard', text: 'View public leaderboards' },
+                  { icon: 'info', text: 'Learn about our mission' },
+                ].map((p, i) => (
+                  <li key={i} className="flex items-start gap-2"><MIcon icon={p.icon} className="text-on-surface-variant mt-0.5 flex-shrink-0" size="text-sm" /><span className="text-xs text-on-surface">{p.text}</span></li>
+                ))}
+                {['Draw entries', 'Score tracking', 'Charity allocation'].map((t, i) => (
+                  <li key={`x-${i}`} className="flex items-start gap-2 opacity-35"><MIcon icon="close" className="text-on-surface-variant mt-0.5 flex-shrink-0" size="text-sm" /><span className="text-xs text-on-surface-variant line-through">{t}</span></li>
+                ))}
               </ul>
-              <button onClick={() => navigate(user ? '/subscription' : '/signup')} className="w-full py-4 rounded-xl border border-primary text-primary font-bold hover:bg-primary/10 transition-colors active:scale-95" data-testid="cta-monthly-btn">Select Monthly</button>
+              <button onClick={() => navigate('/charities')} className="w-full py-2.5 rounded-xl border border-outline-variant/30 text-on-surface-variant font-semibold text-xs hover:bg-surface-container transition-colors">Explore Free</button>
             </motion.div>
-            <motion.div variants={fadeUp} className="relative bg-surface-container-highest p-12 rounded-[2.5rem] shadow-[0_40px_100px_rgba(76,215,246,0.15)] border border-primary/20 hover:scale-[1.02] transition-transform ease-out-expo">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-on-primary-container px-6 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Best Value</div>
-              <div className="text-on-surface-variant font-body uppercase tracking-widest mb-4">Elite Kinetic</div>
-              <div className="text-6xl font-bold mb-4 font-headline">$99.99<span className="text-xl text-on-surface-variant font-normal">/yr</span></div>
-              <p className="text-on-surface-variant mb-8">Maximum impact, 2 months free.</p>
-              <ul className="space-y-4 mb-12 text-left">
-                <li className="flex items-center gap-3"><MIcon icon="check" className="text-primary" size="text-xl" /> 3 Monthly Draw Entries</li>
-                <li className="flex items-center gap-3"><MIcon icon="check" className="text-primary" size="text-xl" /> Elite Tier Leaderboard Access</li>
-                <li className="flex items-center gap-3"><MIcon icon="check" className="text-primary" size="text-xl" /> Direct Charity Selection Control</li>
+
+            {/* Pro — Monthly */}
+            <motion.div variants={fadeUp} className="flex flex-col rounded-2xl bg-surface-container-low border border-outline-variant/15 p-5 hover:border-primary/20 hover:-translate-y-1 transition-all duration-300">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+                <MIcon icon="bolt" className="text-primary" size="text-lg" />
+              </div>
+              <h3 className="text-base font-bold text-on-surface">Pro</h3>
+              <p className="text-[11px] text-on-surface-variant mb-3">Fuel the mission monthly</p>
+              <div className="mb-4"><span className="text-3xl font-bold text-on-surface font-headline">$9.99</span><span className="text-sm text-on-surface-variant ml-1">/mo</span></div>
+              <ul className="space-y-2 mb-5 flex-1">
+                {[
+                  { icon: 'casino', text: '1 monthly draw entry' },
+                  { icon: 'edit_note', text: 'Track up to 5 Stableford rounds' },
+                  { icon: 'volunteer_activism', text: 'Choose & fund your charity (10%+)' },
+                  { icon: 'bar_chart', text: 'Monthly impact reports' },
+                  { icon: 'leaderboard', text: 'Community leaderboard' },
+                  { icon: 'support_agent', text: 'Priority support' },
+                ].map((p, i) => (
+                  <li key={i} className="flex items-start gap-2"><MIcon icon={p.icon} className="text-primary mt-0.5 flex-shrink-0" size="text-sm" /><span className="text-xs text-on-surface">{p.text}</span></li>
+                ))}
               </ul>
-              <button onClick={() => navigate(user ? '/subscription' : '/signup')} className="w-full py-4 rounded-xl bg-gradient-to-br from-primary to-primary-container text-on-primary-container font-bold shadow-lg active:scale-95 transition-all" data-testid="cta-yearly-btn">Start Yearly Impact</button>
+              <button onClick={() => navigate(user ? '/subscription' : '/signup')} className="w-full py-2.5 rounded-xl bg-gradient-to-br from-primary to-primary-container text-on-primary-container font-semibold text-xs shadow-md active:scale-95 transition-all" data-testid="cta-monthly-btn">Start Pro Plan</button>
+            </motion.div>
+
+            {/* Elite — Yearly */}
+            <motion.div variants={fadeUp} className="relative flex flex-col rounded-2xl bg-surface-container-highest border border-tertiary/30 shadow-[0_16px_48px_rgba(255,185,95,0.08)] p-5 hover:-translate-y-1 transition-all duration-300">
+              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-tertiary text-on-tertiary px-3 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest">Most Popular</div>
+              <div className="w-9 h-9 rounded-lg bg-tertiary/10 flex items-center justify-center mb-3">
+                <MIcon icon="diamond" className="text-tertiary" size="text-lg" />
+              </div>
+              <h3 className="text-base font-bold text-on-surface">Elite</h3>
+              <p className="text-[11px] text-on-surface-variant mb-3">Maximum impact — save 17%</p>
+              <div className="mb-4"><span className="text-3xl font-bold text-on-surface font-headline">$99.99</span><span className="text-sm text-on-surface-variant ml-1">/yr</span></div>
+              <ul className="space-y-2 mb-5 flex-1">
+                {[
+                  { icon: 'casino', text: '3 monthly draw entries' },
+                  { icon: 'edit_note', text: 'Track up to 5 Stableford rounds' },
+                  { icon: 'volunteer_activism', text: 'Choose & fund your charity (10%+)' },
+                  { icon: 'bar_chart', text: 'Monthly impact reports' },
+                  { icon: 'leaderboard', text: 'Elite tier leaderboard' },
+                  { icon: 'support_agent', text: 'Priority support' },
+                  { icon: 'workspace_premium', text: 'Exclusive badge & profile flair' },
+                  { icon: 'redeem', text: '2 months free vs. monthly' },
+                ].map((p, i) => (
+                  <li key={i} className="flex items-start gap-2"><MIcon icon={p.icon} className="text-tertiary mt-0.5 flex-shrink-0" size="text-sm" /><span className="text-xs text-on-surface">{p.text}</span></li>
+                ))}
+              </ul>
+              <button onClick={() => navigate(user ? '/subscription' : '/signup')} className="w-full py-2.5 rounded-xl bg-gradient-to-br from-tertiary to-tertiary-container text-on-tertiary-container font-semibold text-xs shadow-lg active:scale-95 transition-all" data-testid="cta-yearly-btn">Go Elite — Save 17%</button>
             </motion.div>
           </div>
         </motion.div>

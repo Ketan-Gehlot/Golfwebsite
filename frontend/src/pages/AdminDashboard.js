@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { adminGetUsers, adminUpdateUser, adminGetAnalytics, adminCreateCharity, adminDeleteCharity, getCharities, adminCreateDraw, adminSimulateDraw, adminPublishDraw, getDraws, adminGetWinners, adminReviewWinner, adminMarkPayout } from '../lib/api';
+import { adminGetUsers, adminUpdateUser, adminGetAnalytics, adminCreateCharity, adminDeleteCharity, getCharities, adminCreateDraw, adminDeleteDraw, adminSimulateDraw, adminPublishDraw, adminPublishManualDraw, getDraws, adminGetWinners, adminReviewWinner, adminMarkPayout } from '../lib/api';
 import { MIcon } from '../components/MIcon';
 import { motion } from 'framer-motion';
 
@@ -19,8 +19,9 @@ export default function AdminDashboard() {
   const [draws, setDraws] = useState([]);
   const [winners, setWinners] = useState([]);
   const [simResult, setSimResult] = useState(null);
+  const [manualWinners, setManualWinners] = useState({});
   const [newCharity, setNewCharity] = useState({ name: '', description: '', logo_url: '', website_url: '', is_featured: false });
-  const [newDraw, setNewDraw] = useState({ draw_date: '', draw_logic_type: 'random' });
+  const [newDraw, setNewDraw] = useState({ draw_date: '', draw_logic_type: 'random', prize_amount: '' });
   const [searchUser, setSearchUser] = useState('');
 
   useEffect(() => { loadAll(); }, []);
@@ -42,15 +43,39 @@ export default function AdminDashboard() {
   };
 
   const handleCreateDraw = async () => {
-    try { await adminCreateDraw(newDraw); setNewDraw({ draw_date: '', draw_logic_type: 'random' }); loadAll(); } catch (err) { alert(err.response?.data?.detail || 'Failed'); }
+    if (!newDraw.draw_date) { alert('Please select a draw date'); return; }
+    const prizeVal = parseFloat(newDraw.prize_amount);
+    if (!newDraw.prize_amount || isNaN(prizeVal) || prizeVal <= 0) { alert('Please enter a valid prize amount greater than 0'); return; }
+    try { await adminCreateDraw({ ...newDraw, prize_amount: prizeVal }); setNewDraw({ draw_date: '', draw_logic_type: 'random', prize_amount: '' }); loadAll(); } catch (err) { alert(err.response?.data?.detail || 'Failed to create draw'); }
+  };
+
+  const handleDeleteDraw = async (drawId) => {
+    if (!window.confirm('Delete this draw and all its entries?')) return;
+    try { await adminDeleteDraw(drawId); loadAll(); } catch (err) { alert(err.response?.data?.detail || 'Failed'); }
   };
 
   const handleSimulate = async (drawId) => {
-    try { const res = await adminSimulateDraw(drawId); setSimResult({ drawId, ...res.data }); } catch (err) { alert(err.response?.data?.detail || 'Failed'); }
+    try { const res = await adminSimulateDraw(drawId); setSimResult({ drawId, ...res.data }); setManualWinners({}); } catch (err) { alert(err.response?.data?.detail || 'Failed'); }
   };
 
   const handlePublish = async (drawId, nums) => {
     try { await adminPublishDraw(drawId, { winning_numbers: nums }); setSimResult(null); loadAll(); } catch (err) { alert(err.response?.data?.detail || 'Failed'); }
+  };
+
+  const handlePublishManual = async (drawId) => {
+    const winnerIds = Object.keys(manualWinners).filter(id => manualWinners[id]);
+    if (winnerIds.length === 0) { alert('Select at least one winner'); return; }
+    const overrides = {};
+    winnerIds.forEach(id => { overrides[id] = manualWinners[id].tier || 3; });
+    try { await adminPublishManualDraw(drawId, { winner_entry_ids: winnerIds, match_overrides: overrides }); setSimResult(null); setManualWinners({}); loadAll(); } catch (err) { alert(err.response?.data?.detail || 'Failed'); }
+  };
+
+  const toggleManualWinner = (entryId, tier = 3) => {
+    setManualWinners(prev => prev[entryId] ? (() => { const n = {...prev}; delete n[entryId]; return n; })() : {...prev, [entryId]: { selected: true, tier }});
+  };
+
+  const setWinnerTier = (entryId, tier) => {
+    setManualWinners(prev => ({...prev, [entryId]: { ...prev[entryId], tier }}));
   };
 
   const handleReview = async (id, status) => { try { await adminReviewWinner(id, { status }); loadAll(); } catch {} };
@@ -110,12 +135,20 @@ export default function AdminDashboard() {
             <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Draw Date</label>
             <input type="date" value={newDraw.draw_date} onChange={(e) => setNewDraw({ ...newDraw, draw_date: e.target.value })}
               className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm text-on-surface focus:ring-2 focus:ring-primary/30 mb-4" data-testid="admin-draw-date" />
+            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Prize Amount ($)</label>
+            <input type="number" min="1" step="0.01" placeholder="e.g. 500.00" value={newDraw.prize_amount} onChange={(e) => setNewDraw({ ...newDraw, prize_amount: e.target.value })}
+              className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm text-on-surface focus:ring-2 focus:ring-primary/30 mb-4" data-testid="admin-draw-prize" />
             <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Algorithm Mode</label>
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="grid grid-cols-3 gap-3 mb-6">
               <button onClick={() => setNewDraw({ ...newDraw, draw_logic_type: 'random' })}
                 className={`p-3 rounded-xl border-2 text-xs font-bold flex flex-col items-center gap-2 transition-all ${newDraw.draw_logic_type === 'random' ? 'border-primary bg-primary/5 text-primary' : 'border-transparent bg-surface-container-highest text-on-surface-variant hover:border-outline-variant'}`}
                 data-testid="draw-mode-random">
                 <MIcon icon="shuffle" size="text-xl" /> Random
+              </button>
+              <button onClick={() => setNewDraw({ ...newDraw, draw_logic_type: 'manual' })}
+                className={`p-3 rounded-xl border-2 text-xs font-bold flex flex-col items-center gap-2 transition-all ${newDraw.draw_logic_type === 'manual' ? 'border-primary bg-primary/5 text-primary' : 'border-transparent bg-surface-container-highest text-on-surface-variant hover:border-outline-variant'}`}
+                data-testid="draw-mode-manual">
+                <MIcon icon="back_hand" size="text-xl" /> Manual
               </button>
               <button onClick={() => setNewDraw({ ...newDraw, draw_logic_type: 'algorithmic' })}
                 className={`p-3 rounded-xl border-2 text-xs font-bold flex flex-col items-center gap-2 transition-all ${newDraw.draw_logic_type === 'algorithmic' ? 'border-primary bg-primary/5 text-primary' : 'border-transparent bg-surface-container-highest text-on-surface-variant hover:border-outline-variant'}`}
@@ -132,16 +165,58 @@ export default function AdminDashboard() {
           {draws.filter(d => d.status === 'scheduled').map(d => (
             <div key={d.id} className="p-4 rounded-2xl bg-surface-container-high border border-outline-variant/20">
               <p className="text-sm font-bold mb-2">{d.draw_date} - <span className="text-primary">${d.prize_pool_amount?.toFixed(2)}</span></p>
+              <p className="text-[10px] text-on-surface-variant mb-3 uppercase tracking-wider">Mode: {d.draw_logic_type || 'random'}</p>
               <div className="flex gap-2">
-                <button onClick={() => handleSimulate(d.id)} className="flex-1 py-2 rounded-xl bg-surface-container-highest text-primary font-bold text-xs hover:bg-surface-bright transition-all" data-testid={`simulate-draw-${d.id}`}>Simulate</button>
+                <button onClick={() => handleSimulate(d.id)} className="flex-1 py-2 rounded-xl bg-surface-container-highest text-primary font-bold text-xs hover:bg-surface-bright transition-all" data-testid={`simulate-draw-${d.id}`}>{d.draw_logic_type === 'manual' ? 'Pick Winners' : 'Simulate'}</button>
+                <button onClick={() => handleDeleteDraw(d.id)} className="py-2 px-3 rounded-xl bg-error/10 text-error hover:bg-error/20 transition-all" data-testid={`delete-draw-${d.id}`}><MIcon icon="delete" size="text-sm" /></button>
               </div>
             </div>
           ))}
 
           {/* Simulation Result */}
-          {simResult && (
+          {simResult && simResult.mode === 'manual' && (
             <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20">
-              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Simulation</p>
+              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Manual Winner Selection</p>
+              <p className="text-xs text-on-surface-variant mb-4">Entries: {simResult.total_entries} | Selected: {Object.keys(manualWinners).length}</p>
+              {simResult.total_entries === 0 ? (
+                <p className="text-sm text-on-surface-variant text-center py-4">No entries yet for this draw.</p>
+              ) : (
+                <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
+                  {(simResult.all_entries || []).map(entry => (
+                    <div key={entry.entry_id} className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                      manualWinners[entry.entry_id] ? 'border-primary bg-primary/10' : 'border-transparent bg-surface-container-highest hover:border-outline-variant'
+                    }`} onClick={() => toggleManualWinner(entry.entry_id, 3)}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-bold text-white">{entry.user_name}</p>
+                          <p className="text-[10px] text-on-surface-variant">Scores: {entry.entry_numbers?.join(', ')}</p>
+                        </div>
+                        {manualWinners[entry.entry_id] && <MIcon icon="check_circle" className="text-primary" size="text-xl" />}
+                      </div>
+                      {manualWinners[entry.entry_id] && (
+                        <div className="flex gap-2 mt-2" onClick={e => e.stopPropagation()}>
+                          {[3, 4, 5].map(t => (
+                            <button key={t} onClick={() => setWinnerTier(entry.entry_id, t)}
+                              className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                                manualWinners[entry.entry_id]?.tier === t ? 'bg-primary text-on-primary' : 'bg-surface-container-highest text-on-surface-variant'
+                              }`}>{t}-Match</button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button onClick={() => handlePublishManual(simResult.drawId)} disabled={Object.keys(manualWinners).length === 0}
+                className="w-full py-3 rounded-xl bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold text-sm shadow-xl shadow-primary/20 disabled:opacity-40" data-testid="publish-manual-btn">
+                Publish Manual Results ({Object.keys(manualWinners).length} winners)
+              </button>
+            </div>
+          )}
+
+          {simResult && simResult.mode !== 'manual' && (
+            <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20">
+              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Simulation ({simResult.mode})</p>
               <p className="text-xl font-black text-primary mb-2">{simResult.winning_numbers?.join(' - ')}</p>
               <p className="text-xs text-on-surface-variant mb-1">Entries: {simResult.total_entries}</p>
               <p className="text-xs text-on-surface-variant mb-1">5-Match: {simResult.simulation_results?.['5_match']?.length || 0}</p>

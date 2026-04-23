@@ -154,10 +154,15 @@ class CharitySelection(BaseModel):
 
 class DrawCreate(BaseModel):
     draw_date: str
-    draw_logic_type: str = "random"
+    draw_logic_type: str = "random"  # random | manual | algorithmic
+    prize_amount: Optional[float] = None  # Admin can manually set prize pool amount
 
 class DrawPublish(BaseModel):
     winning_numbers: List[int]
+
+class DrawManualWinners(BaseModel):
+    winner_entry_ids: List[str]
+    match_overrides: dict = {}  # entry_id -> match_count (3, 4, or 5)
 
 class VerificationSubmit(BaseModel):
     proof_url: str
@@ -796,33 +801,51 @@ async def admin_update_score(user_id: str, score_id: str, req: AdminScoreUpdate,
 # Admin Draw Management
 @api_router.post("/admin/draws")
 async def admin_create_draw(req: DrawCreate, admin=Depends(get_admin_user)):
+    if req.draw_logic_type not in ("random", "manual", "algorithmic"):
+        raise HTTPException(status_code=400, detail="draw_logic_type must be random, manual, or algorithmic")
     draw_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     
-    # Get prize pool
-    current_month = datetime.now(timezone.utc).strftime("%Y-%m")
-    pool = await db.prize_pools.find_one({"month": current_month}, {"_id": 0})
-    pool_amount = pool.get("total_amount", 0) if pool else 0
-    
-    # Check for jackpot rollover
-    jackpot = await db.jackpot_rollover.find_one({"status": "active"}, {"_id": 0})
-    rollover_amount = jackpot.get("amount", 0) if jackpot else 0
+    # Use admin-specified prize amount, or auto-calculate from prize pool
+    rollover_amount = 0
+    if req.prize_amount is not None and req.prize_amount > 0:
+        total_pool = req.prize_amount
+    else:
+        # Get prize pool
+        current_month = datetime.now(timezone.utc).strftime("%Y-%m")
+        pool = await db.prize_pools.find_one({"month": current_month}, {"_id": 0})
+        pool_amount = pool.get("total_amount", 0) if pool else 0
+        
+        # Check for jackpot rollover
+        jackpot = await db.jackpot_rollover.find_one({"status": "active"}, {"_id": 0})
+        rollover_amount = jackpot.get("amount", 0) if jackpot else 0
+        total_pool = pool_amount + rollover_amount
     
     draw_doc = {
         "id": draw_id,
         "draw_date": req.draw_date,
         "draw_logic_type": req.draw_logic_type,
         "status": "scheduled",
-        "prize_pool_amount": pool_amount + rollover_amount,
-        "five_match_pool": (pool_amount + rollover_amount) * 0.40,
-        "four_match_pool": (pool_amount + rollover_amount) * 0.35,
-        "three_match_pool": (pool_amount + rollover_amount) * 0.25,
+        "prize_pool_amount": total_pool,
+        "five_match_pool": total_pool * 0.40,
+        "four_match_pool": total_pool * 0.35,
+        "three_match_pool": total_pool * 0.25,
         "rollover_amount": rollover_amount,
         "created_at": now,
         "updated_at": now,
     }
     await db.draws.insert_one(draw_doc)
     return {k: v for k, v in draw_doc.items() if k != "_id"}
+
+@api_router.delete("/admin/draws/{draw_id}")
+async def admin_delete_draw(draw_id: str, admin=Depends(get_admin_user)):
+    draw = await db.draws.find_one({"id": draw_id})
+    if not draw:
+        raise HTTPException(status_code=404, detail="Draw not found")
+    await db.draws.delete_one({"id": draw_id})
+    await db.draw_entries.delete_many({"draw_id": draw_id})
+    await db.draw_results.delete_many({"draw_id": draw_id})
+    return {"message": "Draw and related data deleted"}
 
 @api_router.post("/admin/draws/{draw_id}/simulate")
 async def admin_simulate_draw(draw_id: str, admin=Depends(get_admin_user)):
@@ -831,8 +854,28 @@ async def admin_simulate_draw(draw_id: str, admin=Depends(get_admin_user)):
         raise HTTPException(status_code=404, detail="Draw not found")
     
     entries = await db.draw_entries.find({"draw_id": draw_id}, {"_id": 0}).to_list(10000)
+    logic = draw.get("draw_logic_type", "random")
     
-    if draw.get("draw_logic_type") == "algorithmic":
+    if logic == "manual":
+        # Manual mode: return all entries so admin can hand-pick winners
+        all_entries = []
+        for entry in entries:
+            all_entries.append({
+                "entry_id": entry["id"],
+                "user_id": entry["user_id"],
+                "user_name": entry.get("user_name", ""),
+                "entry_numbers": entry["entry_numbers"],
+            })
+        return {
+            "mode": "manual",
+            "winning_numbers": [],
+            "all_entries": all_entries,
+            "simulation_results": {"5_match": [], "4_match": [], "3_match": []},
+            "total_entries": len(entries),
+        }
+    
+    if logic == "algorithmic":
+        # Algorithmic: pick winning numbers as the LEAST common scores across all entries
         all_scores = []
         for entry in entries:
             all_scores.extend(entry["entry_numbers"])
@@ -845,6 +888,7 @@ async def admin_simulate_draw(draw_id: str, admin=Depends(get_admin_user)):
         else:
             winning = random.sample(range(1, 46), 5)
     else:
+        # Random: pure random winning numbers
         winning = random.sample(range(1, 46), 5)
     
     # Analyze matches
@@ -858,8 +902,20 @@ async def admin_simulate_draw(draw_id: str, admin=Depends(get_admin_user)):
                 "entry_numbers": entry["entry_numbers"]
             })
     
+    all_entries = []
+    if logic == "algorithmic":
+        for entry in entries:
+            all_entries.append({
+                "entry_id": entry["id"],
+                "user_id": entry["user_id"],
+                "user_name": entry.get("user_name", ""),
+                "entry_numbers": entry["entry_numbers"],
+            })
+    
     return {
+        "mode": logic,
         "winning_numbers": winning,
+        "all_entries": all_entries,
         "simulation_results": results,
         "total_entries": len(entries),
     }
@@ -953,6 +1009,75 @@ async def admin_publish_draw(draw_id: str, req: DrawPublish, admin=Depends(get_a
         "three_match_winners": len(three_winners),
         "jackpot_rolled_over": len(five_winners) == 0,
     }
+
+@api_router.post("/admin/draws/{draw_id}/publish-manual")
+async def admin_publish_manual_draw(draw_id: str, req: DrawManualWinners, admin=Depends(get_admin_user)):
+    """Publish a manual draw where admin hand-picks winners and assigns match tiers."""
+    draw = await db.draws.find_one({"id": draw_id}, {"_id": 0})
+    if not draw:
+        raise HTTPException(status_code=404, detail="Draw not found")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    pool = draw.get("prize_pool_amount", 0)
+    five_pool = pool * 0.40
+    four_pool = pool * 0.35
+    three_pool = pool * 0.25
+    
+    # Group winners by match tier
+    five_winners = []
+    four_winners = []
+    three_winners = []
+    
+    for eid in req.winner_entry_ids:
+        match_count = req.match_overrides.get(eid, 3)
+        entry = await db.draw_entries.find_one({"id": eid}, {"_id": 0})
+        if not entry:
+            continue
+        if match_count >= 5:
+            five_winners.append(entry)
+        elif match_count >= 4:
+            four_winners.append(entry)
+        else:
+            three_winners.append(entry)
+    
+    # Distribute prizes
+    if five_winners:
+        prize_each = five_pool / len(five_winners)
+        for w in five_winners:
+            await db.draw_entries.update_one({"id": w["id"]}, {"$set": {
+                "is_winner": True, "match_count": 5, "winnings_amount": prize_each, "verification_status": "pending_upload"
+            }})
+    else:
+        await db.jackpot_rollover.update_one(
+            {"status": "active"}, {"$inc": {"amount": five_pool}, "$set": {"updated_at": now}}, upsert=True
+        )
+    
+    if four_winners:
+        prize_each = four_pool / len(four_winners)
+        for w in four_winners:
+            await db.draw_entries.update_one({"id": w["id"]}, {"$set": {
+                "is_winner": True, "match_count": 4, "winnings_amount": prize_each, "verification_status": "pending_upload"
+            }})
+    
+    if three_winners:
+        prize_each = three_pool / len(three_winners)
+        for w in three_winners:
+            await db.draw_entries.update_one({"id": w["id"]}, {"$set": {
+                "is_winner": True, "match_count": 3, "winnings_amount": prize_each, "verification_status": "pending_upload"
+            }})
+    
+    # Store result
+    result_id = str(uuid.uuid4())
+    await db.draw_results.insert_one({
+        "id": result_id, "draw_id": draw_id,
+        "winning_numbers": [], "manual_winners": req.winner_entry_ids,
+        "published_at": now,
+    })
+    
+    await db.draws.update_one({"id": draw_id}, {"$set": {"status": "published", "updated_at": now}})
+    
+    total = len(five_winners) + len(four_winners) + len(three_winners)
+    return {"message": f"Manual draw published with {total} winners", "total_winners": total}
 
 # Admin Winner Management
 @api_router.get("/admin/winners")
@@ -1137,6 +1262,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
+        "http://localhost:3001",
         "http://localhost:8000",
     ],
     allow_origin_regex=r"https://golfwebsite.*\.vercel\.app",
