@@ -1131,28 +1131,15 @@ async def seed_data():
 # Include router
 app.include_router(api_router)
 
-# Build allowed origins list
-_cors_env = os.environ.get('CORS_ORIGINS', '').strip()
-if _cors_env and _cors_env != '*':
-    _allowed_origins = [o.strip() for o in _cors_env.split(',') if o.strip()]
-else:
-    _allowed_origins = []
-
-# Always include known production + dev origins
-_default_origins = [
-    "https://golfwebsite-psi.vercel.app",
-    "http://localhost:3000",
-    "http://localhost:8000",
-]
-for origin in _default_origins:
-    if origin not in _allowed_origins:
-        _allowed_origins.append(origin)
-
-logger.info(f"CORS allowed origins: {_allowed_origins}")
-
+# CORS: Allow all Vercel deployment URLs (preview, production, branch)
+# plus localhost for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_allowed_origins,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:8000",
+    ],
+    allow_origin_regex=r"https://golfwebsite.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
