@@ -131,6 +131,7 @@ class ScoreUpdate(BaseModel):
 class CharityCreate(BaseModel):
     name: str
     description: str
+    category: Optional[str] = ""
     logo_url: Optional[str] = ""
     website_url: Optional[str] = ""
     images: Optional[List[str]] = []
@@ -140,6 +141,7 @@ class CharityCreate(BaseModel):
 class CharityUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
+    category: Optional[str] = None
     logo_url: Optional[str] = None
     website_url: Optional[str] = None
     images: Optional[List[str]] = None
@@ -1057,6 +1059,7 @@ async def seed_data():
             {
                 "id": str(uuid.uuid4()), "name": "Green Earth Foundation",
                 "description": "Dedicated to reforestation and environmental conservation worldwide. We plant trees, restore ecosystems, and educate communities about sustainable practices.",
+                "category": "Environmental Conservation",
                 "logo_url": "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=200&h=200&fit=crop",
                 "website_url": "https://example.com/green-earth",
                 "images": ["https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600"],
@@ -1066,6 +1069,7 @@ async def seed_data():
             {
                 "id": str(uuid.uuid4()), "name": "Youth Sports Initiative",
                 "description": "Providing sports equipment and coaching to underprivileged youth. Every child deserves the chance to play and grow through sport.",
+                "category": "Youth Sports",
                 "logo_url": "https://images.unsplash.com/photo-1526232761682-d26e03ac148e?w=200&h=200&fit=crop",
                 "website_url": "https://example.com/youth-sports",
                 "images": ["https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600"],
@@ -1075,6 +1079,7 @@ async def seed_data():
             {
                 "id": str(uuid.uuid4()), "name": "Ocean Conservation Society",
                 "description": "Protecting marine life and cleaning our oceans. From coral reef restoration to beach cleanups, we fight for cleaner seas.",
+                "category": "Environmental Conservation",
                 "logo_url": "https://images.unsplash.com/photo-1484291470158-b8f8d608850d?w=200&h=200&fit=crop",
                 "website_url": "https://example.com/ocean-conservation",
                 "images": ["https://images.unsplash.com/photo-1483683804023-6ccdb62f86ef?w=600"],
@@ -1084,6 +1089,7 @@ async def seed_data():
             {
                 "id": str(uuid.uuid4()), "name": "Mental Health Alliance",
                 "description": "Breaking stigma and providing mental health support. We offer counselling, workshops, and community programs for wellbeing.",
+                "category": "Health & Wellness",
                 "logo_url": "https://images.unsplash.com/photo-1559757175-5700dde675bc?w=200&h=200&fit=crop",
                 "website_url": "https://example.com/mental-health",
                 "images": ["https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=600"],
@@ -1093,6 +1099,7 @@ async def seed_data():
             {
                 "id": str(uuid.uuid4()), "name": "Community Food Bank Network",
                 "description": "Fighting hunger in local communities. We collect, sort, and distribute food to those who need it most.",
+                "category": "Education",
                 "logo_url": "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=200&h=200&fit=crop",
                 "website_url": "https://example.com/food-bank",
                 "images": ["https://images.unsplash.com/photo-1593113598332-cd288d649433?w=600"],
@@ -1101,16 +1108,52 @@ async def seed_data():
             },
         ]
         await db.charities.insert_many(charities)
+    else:
+        # Backfill category for existing charities that don't have one
+        category_map = {
+            "Green Earth Foundation": "Environmental Conservation",
+            "Youth Sports Initiative": "Youth Sports",
+            "Ocean Conservation Society": "Environmental Conservation",
+            "Mental Health Alliance": "Health & Wellness",
+            "Community Food Bank Network": "Education",
+        }
+        missing_category = await db.charities.find(
+            {"category": {"$exists": False}}, {"_id": 0, "id": 1, "name": 1}
+        ).to_list(100)
+        for charity in missing_category:
+            cat = category_map.get(charity["name"], "Education")
+            await db.charities.update_one(
+                {"id": charity["id"]}, {"$set": {"category": cat}}
+            )
     
     return {"message": "Seed data created", "admin_email": "admin@golfcharity.com", "admin_password": "admin123"}
 
 # Include router
 app.include_router(api_router)
 
+# Build allowed origins list
+_cors_env = os.environ.get('CORS_ORIGINS', '').strip()
+if _cors_env and _cors_env != '*':
+    _allowed_origins = [o.strip() for o in _cors_env.split(',') if o.strip()]
+else:
+    _allowed_origins = []
+
+# Always include known production + dev origins
+_default_origins = [
+    "https://golfwebsite-psi.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:8000",
+]
+for origin in _default_origins:
+    if origin not in _allowed_origins:
+        _allowed_origins.append(origin)
+
+logger.info(f"CORS allowed origins: {_allowed_origins}")
+
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=_allowed_origins,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
     allow_methods=["*"],
     allow_headers=["*"],
 )
