@@ -21,8 +21,10 @@ export default function CharityDirectoryPage() {
   const [activeFilter, setActiveFilter] = useState('All Causes');
   const [featured, setFeatured] = useState(null);
   const [selectedCharity, setSelectedCharity] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const loadCharities = useCallback(async () => {
+    setLoading(true);
     try {
       const params = {};
       if (search) params.search = search;
@@ -31,8 +33,12 @@ export default function CharityDirectoryPage() {
       const all = res.data.charities || [];
       setCharitiesList(all);
       const feat = all.find(c => c.is_featured);
-      if (feat) setFeatured(feat);
-    } catch { }
+      setFeatured(feat || null);
+    } catch (err) {
+      console.error('Failed to load charities:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [search, activeFilter]);
 
   useEffect(() => { loadCharities(); }, [loadCharities]);
@@ -116,6 +122,21 @@ export default function CharityDirectoryPage() {
 
       {/* Charity Grid */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {loading && (
+          <div className="lg:col-span-3 flex items-center justify-center py-20">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+              <p className="text-on-surface-variant text-sm">Loading charities...</p>
+            </div>
+          </div>
+        )}
+        {!loading && charities.length === 0 && (
+          <div className="lg:col-span-3 flex flex-col items-center justify-center py-20">
+            <MIcon icon="search_off" size="text-5xl" className="text-on-surface-variant/50 mb-4" />
+            <h3 className="text-xl font-bold text-on-surface-variant mb-2">No charities found</h3>
+            <p className="text-on-surface-variant/70 text-sm">Try adjusting your search or filters</p>
+          </div>
+        )}
         {charities.map((charity, idx) => (
           <motion.div key={charity.id}
             initial={{ opacity: 0, y: 20 }}
