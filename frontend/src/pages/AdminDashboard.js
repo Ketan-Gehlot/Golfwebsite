@@ -20,6 +20,13 @@ export default function AdminDashboard() {
   const [winners, setWinners] = useState([]);
   const [simResult, setSimResult] = useState(null);
   const [manualWinners, setManualWinners] = useState({});
+  const [notification, setNotification] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+
+  const showNotification = (msg, type = 'success') => {
+    setNotification({ msg, type });
+    setTimeout(() => setNotification(null), 4000);
+  };
   const [newCharity, setNewCharity] = useState({ name: '', description: '', logo_url: '', website_url: '', is_featured: false });
   const [newDraw, setNewDraw] = useState({ draw_date: '', draw_logic_type: 'random', prize_amount: '' });
   const [searchUser, setSearchUser] = useState('');
@@ -39,23 +46,57 @@ export default function AdminDashboard() {
 
   const handleDeleteCharity = async (id) => {
     if (!window.confirm('Delete?')) return;
-    try { await adminDeleteCharity(id); loadAll(); } catch {}
+    try { 
+      await adminDeleteCharity(id); 
+      loadAll(); 
+      showNotification('Charity deleted');
+    } catch {}
   };
 
-  const handleCreateDraw = async () => {
-    if (!newDraw.draw_date) { alert('Please select a draw date'); return; }
-    const prizeVal = parseFloat(newDraw.prize_amount);
-    if (!newDraw.prize_amount || isNaN(prizeVal) || prizeVal <= 0) { alert('Please enter a valid prize amount greater than 0'); return; }
-    try { await adminCreateDraw({ ...newDraw, prize_amount: prizeVal }); setNewDraw({ draw_date: '', draw_logic_type: 'random', prize_amount: '' }); loadAll(); } catch (err) { alert(err.response?.data?.detail || 'Failed to create draw'); }
+  const handleCreateDraw = async (e) => {
+    e?.preventDefault();
+    if (!newDraw.draw_date) { showNotification('Please select a draw date', 'error'); return; }
+    const prizeVal = parseFloat(newDraw.prize_amount.toString().replace(/[^0-9.]/g, ''));
+    if (!newDraw.prize_amount || isNaN(prizeVal) || prizeVal <= 0) { showNotification('Please enter a valid prize amount', 'error'); return; }
+    try { 
+      await adminCreateDraw({ ...newDraw, prize_amount: prizeVal }); 
+      setNewDraw({ draw_date: '', draw_logic_type: 'random', prize_amount: '' }); 
+      await loadAll(); 
+      showNotification('Draw successfully created!');
+    } catch (err) { 
+      showNotification(err.response?.data?.detail || 'Failed to create draw', 'error'); 
+    }
   };
 
-  const handleDeleteDraw = async (drawId) => {
-    if (!window.confirm('Delete this draw and all its entries?')) return;
-    try { await adminDeleteDraw(drawId); loadAll(); } catch (err) { alert(err.response?.data?.detail || 'Failed'); }
+  const handleDeleteDraw = async (drawId, e) => {
+    e?.stopPropagation();
+    
+    if (confirmDeleteId !== drawId) {
+      setConfirmDeleteId(drawId);
+      // Auto-reset confirm state after 3 seconds
+      setTimeout(() => setConfirmDeleteId(null), 3000);
+      return;
+    }
+
+    try { 
+      await adminDeleteDraw(drawId); 
+      setConfirmDeleteId(null);
+      await loadAll(); 
+      showNotification('Draw deleted successfully');
+    } catch (err) { 
+      showNotification(err.response?.data?.detail || 'Failed to delete draw', 'error'); 
+    }
   };
 
-  const handleSimulate = async (drawId) => {
-    try { const res = await adminSimulateDraw(drawId); setSimResult({ drawId, ...res.data }); setManualWinners({}); } catch (err) { alert(err.response?.data?.detail || 'Failed'); }
+  const handleSimulate = async (drawId, e) => {
+    e?.preventDefault();
+    try { 
+      const res = await adminSimulateDraw(drawId); 
+      setSimResult({ drawId, ...res.data }); 
+      setManualWinners({}); 
+    } catch (err) { 
+      alert(err.response?.data?.detail || 'Failed'); 
+    }
   };
 
   const handlePublish = async (drawId, nums) => {
@@ -84,7 +125,19 @@ export default function AdminDashboard() {
   const filteredUsers = users.filter(u => !searchUser || u.email?.includes(searchUser) || u.first_name?.toLowerCase().includes(searchUser.toLowerCase()));
 
   return (
-    <div className="pt-10 pb-24 px-6 md:px-12 min-h-screen max-w-7xl mx-auto">
+    <div className="pt-10 pb-24 px-6 md:px-12 min-h-screen max-w-7xl mx-auto relative">
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed top-24 right-8 z-50 animate-in slide-in-from-right-8 fade-in duration-300">
+          <div className={`px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 font-bold text-sm ${
+            notification.type === 'error' ? 'bg-error text-white' : 'bg-green-500 text-white'
+          }`}>
+            <MIcon icon={notification.type === 'error' ? 'error_outline' : 'check_circle'} size="text-xl" />
+            {notification.msg}
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <section className="mb-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
@@ -140,38 +193,26 @@ export default function AdminDashboard() {
               className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm text-on-surface focus:ring-2 focus:ring-primary/30 mb-4" data-testid="admin-draw-prize" />
             <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Algorithm Mode</label>
             <div className="grid grid-cols-3 gap-3 mb-6">
-              <button onClick={() => setNewDraw({ ...newDraw, draw_logic_type: 'random' })}
+              <button type="button" onClick={() => setNewDraw({ ...newDraw, draw_logic_type: 'random' })}
                 className={`p-3 rounded-xl border-2 text-xs font-bold flex flex-col items-center gap-2 transition-all ${newDraw.draw_logic_type === 'random' ? 'border-primary bg-primary/5 text-primary' : 'border-transparent bg-surface-container-highest text-on-surface-variant hover:border-outline-variant'}`}
                 data-testid="draw-mode-random">
                 <MIcon icon="shuffle" size="text-xl" /> Random
               </button>
-              <button onClick={() => setNewDraw({ ...newDraw, draw_logic_type: 'manual' })}
+              <button type="button" onClick={() => setNewDraw({ ...newDraw, draw_logic_type: 'manual' })}
                 className={`p-3 rounded-xl border-2 text-xs font-bold flex flex-col items-center gap-2 transition-all ${newDraw.draw_logic_type === 'manual' ? 'border-primary bg-primary/5 text-primary' : 'border-transparent bg-surface-container-highest text-on-surface-variant hover:border-outline-variant'}`}
                 data-testid="draw-mode-manual">
                 <MIcon icon="back_hand" size="text-xl" /> Manual
               </button>
-              <button onClick={() => setNewDraw({ ...newDraw, draw_logic_type: 'algorithmic' })}
+              <button type="button" onClick={() => setNewDraw({ ...newDraw, draw_logic_type: 'algorithmic' })}
                 className={`p-3 rounded-xl border-2 text-xs font-bold flex flex-col items-center gap-2 transition-all ${newDraw.draw_logic_type === 'algorithmic' ? 'border-primary bg-primary/5 text-primary' : 'border-transparent bg-surface-container-highest text-on-surface-variant hover:border-outline-variant'}`}
                 data-testid="draw-mode-algorithmic">
                 <MIcon icon="precision_manufacturing" size="text-xl" /> Algorithmic
               </button>
             </div>
             <div className="space-y-3">
-              <button onClick={handleCreateDraw} className="w-full py-3 rounded-xl bg-surface-container-highest text-white font-bold text-sm hover:bg-surface-bright transition-all" data-testid="admin-create-draw-btn">Create Draw</button>
+              <button type="button" onClick={handleCreateDraw} className="w-full py-3 rounded-xl bg-surface-container-highest text-white font-bold text-sm hover:bg-surface-bright transition-all" data-testid="admin-create-draw-btn">Create Draw</button>
             </div>
           </div>
-
-          {/* Active Draws */}
-          {draws.filter(d => d.status === 'scheduled').map(d => (
-            <div key={d.id} className="p-4 rounded-2xl bg-surface-container-high border border-outline-variant/20">
-              <p className="text-sm font-bold mb-2">{d.draw_date} - <span className="text-primary">${d.prize_pool_amount?.toFixed(2)}</span></p>
-              <p className="text-[10px] text-on-surface-variant mb-3 uppercase tracking-wider">Mode: {d.draw_logic_type || 'random'}</p>
-              <div className="flex gap-2">
-                <button onClick={() => handleSimulate(d.id)} className="flex-1 py-2 rounded-xl bg-surface-container-highest text-primary font-bold text-xs hover:bg-surface-bright transition-all" data-testid={`simulate-draw-${d.id}`}>{d.draw_logic_type === 'manual' ? 'Pick Winners' : 'Simulate'}</button>
-                <button onClick={() => handleDeleteDraw(d.id)} className="py-2 px-3 rounded-xl bg-error/10 text-error hover:bg-error/20 transition-all" data-testid={`delete-draw-${d.id}`}><MIcon icon="delete" size="text-sm" /></button>
-              </div>
-            </div>
-          ))}
 
           {/* Simulation Result */}
           {simResult && simResult.mode === 'manual' && (
@@ -228,6 +269,20 @@ export default function AdminDashboard() {
               </button>
             </div>
           )}
+
+          {/* Active Draws */}
+          {draws.filter(d => d.status === 'scheduled').map(d => (
+            <div key={d.id} className="p-4 rounded-2xl bg-surface-container-high border border-outline-variant/20">
+              <p className="text-sm font-bold mb-2">{d.draw_date} - <span className="text-primary">${d.prize_pool_amount?.toFixed(2)}</span></p>
+              <p className="text-[10px] text-on-surface-variant mb-3 uppercase tracking-wider">Mode: {d.draw_logic_type || 'random'}</p>
+              <div className="flex gap-2">
+                <button type="button" onClick={(e) => handleSimulate(d.id, e)} className="flex-1 py-2 rounded-xl bg-surface-container-highest text-primary font-bold text-xs hover:bg-surface-bright transition-all cursor-pointer z-10 relative" data-testid={`simulate-draw-${d.id}`}>{d.draw_logic_type === 'manual' ? 'Pick Winners' : 'Simulate'}</button>
+                <button type="button" onClick={(e) => handleDeleteDraw(d.id, e)} className={`py-2 px-3 rounded-xl transition-all cursor-pointer z-10 relative text-xs font-bold ${confirmDeleteId === d.id ? 'bg-error text-white' : 'bg-error/10 text-error hover:bg-error/20'}`} data-testid={`delete-draw-${d.id}`}>
+                  {confirmDeleteId === d.id ? 'Confirm' : <MIcon icon="delete" size="text-sm" />}
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Verification Queue */}

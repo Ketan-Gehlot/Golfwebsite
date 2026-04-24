@@ -678,7 +678,7 @@ async def get_my_charity(user=Depends(get_current_user)):
 
 @api_router.get("/draws")
 async def list_draws(user=Depends(get_current_user)):
-    draws = await db.draws.find({}, {"_id": 0}).sort("draw_date", -1).to_list(50)
+    draws = await db.draws.find({}, {"_id": 0}).sort("draw_date", -1).to_list(1000)
     return {"draws": draws}
 
 @api_router.get("/draws/{draw_id}")
